@@ -157,10 +157,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
-      - uses: youcefzemmar/groundtruth@v0.2.0
+      - uses: youcefzemmar/groundtruth@v0.3.0
 ```
 
 Add `with: { strict: true }` to turn it into a merge gate. Full options in [docs/github-action.md](docs/github-action.md).
+
+### Locally, against your commit message
+
+`--staged` checks a message against what's actually staged — drop this in `.git/hooks/commit-msg` (or a [lefthook](https://github.com/evilmartians/lefthook)/husky `commit-msg` hook):
+
+```sh
+#!/bin/sh
+# .git/hooks/commit-msg — verify the commit message against the staged diff
+npx @twarc_net/groundtruth verify --summary "$1" --staged
+# add --strict to abort the commit when a claim is unsupported
+```
 
 ## Configuration
 

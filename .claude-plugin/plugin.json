@@ -1,7 +1,7 @@
 {
   "name": "groundtruth",
   "description": "Verify that your AI's end-of-turn summary matches the actual diff — catches claimed work that never happened.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "youcefzemmar",
   "homepage": "https://github.com/youcefzemmar/groundtruth",
   "license": "MIT",
