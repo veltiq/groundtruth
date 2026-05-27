@@ -21,7 +21,7 @@ export function extractClaims(summary: string): Claim[] {
     claims.push({ kind, target, polarity, source: source.trim() });
   };
 
-  for (const clause of splitClauses(summary)) {
+  for (const clause of splitClauses(stripCodeFences(summary))) {
     if (isIntent(clause)) continue;
 
     const polarity = detectPolarity(clause);
@@ -29,16 +29,31 @@ export function extractClaims(summary: string): Claim[] {
       ADD_VERBS.test(clause) || REMOVE_VERBS.test(clause) || MODIFY_VERBS.test(clause);
     let concrete = false;
 
+    // "renamed `A` to `B`" — the old name should be gone, the new name present.
+    const renamed = matchRename(clause);
+    if (renamed) {
+      add("symbol", renamed.from, "remove", clause);
+      add("symbol", renamed.to, "add", clause);
+      concrete = true;
+    }
+
     for (const tok of backtickTokens(clause)) {
-      const kind = classifyToken(tok);
-      if (kind === "file") {
+      if (looksLikePath(tok)) {
         add("file", tok, polarity, clause);
         concrete = true;
-      } else if (kind === "symbol") {
-        add("symbol", stripCall(tok), polarity, clause);
-        concrete = true;
-      } else if (kind === "command") {
-        add("command", tok, polarity, clause);
+        continue;
+      }
+      if (tok.includes(" ")) {
+        const first = (tok.split(/\s+/)[0] ?? "").toLowerCase();
+        if (COMMAND_WORDS.has(first)) {
+          add("command", tok, polarity, clause);
+          concrete = true;
+        }
+        continue;
+      }
+      const sym = symbolName(tok);
+      if (sym) {
+        add("symbol", sym, polarity, clause);
         concrete = true;
       }
     }
@@ -226,19 +241,33 @@ const SPECIAL_FILES = new Set([
   ".editorconfig",
 ]);
 
-function classifyToken(tok: string): "file" | "symbol" | "command" | null {
-  if (looksLikePath(tok)) return "file";
-  if (tok.includes(" ")) {
-    const first = tok.split(/\s+/)[0] ?? "";
-    return COMMAND_WORDS.has(first.toLowerCase()) ? "command" : null;
-  }
+/** Normalizes a backtick token to a symbol name, or null if it isn't one. */
+function symbolName(tok: string): string | null {
+  // JSX/HTML elements: `<Button>`, `</Modal>`, `<Foo.Bar ...>` -> the tag name.
+  const jsx = /^<\/?\s*([A-Za-z][\w.]*)\b[^>]*>$/.exec(tok);
+  if (jsx?.[1]) return jsx[1];
   const id = stripCall(tok);
-  if (/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(id)) return "symbol";
-  return null;
+  return /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(id) ? id : null;
+}
+
+/** Matches "renamed `A` to `B`" forms and returns the two symbol names. */
+function matchRename(clause: string): { from: string; to: string } | null {
+  if (!/\brenam(?:e|ed|es|ing)\b/i.test(clause)) return null;
+  const m = /`([^`]+)`\s*(?:to|into|->|→|=>)\s*`([^`]+)`/i.exec(clause);
+  if (!m?.[1] || !m[2]) return null;
+  const from = symbolName(m[1]);
+  const to = symbolName(m[2]);
+  return from && to ? { from, to } : null;
+}
+
+/** Removes fenced code blocks so code samples in a summary aren't mined for claims. */
+function stripCodeFences(text: string): string {
+  return text.replace(/```[\s\S]*?```/g, " ").replace(/~~~[\s\S]*?~~~/g, " ");
 }
 
 function looksLikePath(tok: string): boolean {
   if (tok.includes(" ")) return false;
+  if (/[<>]/.test(tok)) return false; // JSX/HTML tags like `</Modal>`, not paths
   if (SPECIAL_FILES.has(tok)) return true;
   if (/^https?:\/\//i.test(tok)) return false;
   const ext = extOf(tok);
