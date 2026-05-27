@@ -16,7 +16,7 @@
 
 # groundtruth
 
-> **Kurz gesagt** — Deine KI sagt _„Fertig! Ich habe X hinzugefügt, Y behoben, Tests geschrieben."_ groundtruth prüft jede Behauptung gegen den echten Diff und markiert die, die nie passiert sind. Ein Befehl: `npx @twarc_net/groundtruth install`.
+> **Kurz gesagt** — Deine KI sagt _„Fertig! Ich habe X hinzugefügt, Y behoben, Tests geschrieben."_ groundtruth prüft jede Behauptung gegen den echten Diff und markiert die, die nie passiert sind. Ein Befehl: `npx @veltiq/groundtruth install`.
 
 **Erkenne, wenn dein KI-Coding-Assistent behauptet, Arbeit erledigt zu haben, die er nie gemacht hat.**
 
@@ -41,7 +41,7 @@ groundtruth — claim check
 ## In 30 Sekunden ausprobieren
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## Installation
@@ -50,10 +50,10 @@ Erfordert Node ≥ 20. Keine globale Installation nötig — der Hook läuft üb
 
 ```bash
 # Als Stop-Hook von Claude Code für dieses Projekt installieren
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …oder für alle Projekte
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
 Starte Claude Code neu (oder führe `/hooks` aus), und groundtruth prüft jeden Zug automatisch.
@@ -80,4 +80,4 @@ Die vollständige Dokumentation ist auf Englisch: [README](../../README.md) · [
 
 ## Lizenz
 
-[MIT](../../LICENSE) © youcefzemmar
+[MIT](../../LICENSE) © Veltiq

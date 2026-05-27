@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report security issues privately via GitHub's
-[private vulnerability reporting](https://github.com/youcefzemmar/groundtruth/security/advisories/new)
+[private vulnerability reporting](https://github.com/veltiq/groundtruth/security/advisories/new)
 rather than opening a public issue. We aim to acknowledge reports within a few
 days.
 

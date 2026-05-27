@@ -3,7 +3,7 @@
 Try groundtruth against a canned transcript:
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 (`--no-git` makes the output deterministic by checking the claims against the

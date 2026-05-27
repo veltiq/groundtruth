@@ -15,7 +15,7 @@
   <text x="450" y="32" font-size="12" fill="#6e7681" text-anchor="middle">claude code — your project</text>
 
   <g font-size="16">
-    <text class="r" style="animation-delay:.2s" x="32" y="82" fill="#6e7681">$ <tspan fill="#e6edf3">npx @twarc_net/groundtruth verify</tspan></text>
+    <text class="r" style="animation-delay:.2s" x="32" y="82" fill="#6e7681">$ <tspan fill="#e6edf3">npx @veltiq/groundtruth verify</tspan></text>
 
     <text class="r" style="animation-delay:.9s" x="32" y="120" font-size="14" fill="#8b949e">Claude said: “Added a <tspan fill="#c9d1d9">`rateLimiter`</tspan> to <tspan fill="#c9d1d9">`src/server.ts`</tspan>, fixed the bug, added tests.”</text>
 

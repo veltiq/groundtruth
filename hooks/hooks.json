@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx -y @twarc_net/groundtruth hook"
+            "command": "npx -y @veltiq/groundtruth hook"
           }
         ]
       }

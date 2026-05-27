@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0   # needed so base...HEAD can be diffed
-      - uses: youcefzemmar/groundtruth@v0.3.0
+      - uses: veltiq/groundtruth@v0.3.0
 ```
 
 That's it. On each PR, groundtruth extracts the claims in the description and
@@ -57,7 +57,7 @@ Start advisory (comment only). When you trust it, flip on `strict` to block PRs
 whose description claims work the diff doesn't contain:
 
 ```yaml
-      - uses: youcefzemmar/groundtruth@v0.3.0
+      - uses: veltiq/groundtruth@v0.3.0
         with:
           strict: true
 ```

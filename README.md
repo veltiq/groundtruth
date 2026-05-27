@@ -3,12 +3,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/youcefzemmar/groundtruth/actions/workflows/ci.yml"><img src="https://github.com/youcefzemmar/groundtruth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.npmjs.com/package/@twarc_net/groundtruth"><img src="https://img.shields.io/npm/v/@twarc_net/groundtruth?color=cb3837&logo=npm" alt="npm"></a>
+  <a href="https://github.com/veltiq/groundtruth/actions/workflows/ci.yml"><img src="https://github.com/veltiq/groundtruth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/@veltiq/groundtruth"><img src="https://img.shields.io/npm/v/@veltiq/groundtruth?color=cb3837&logo=npm" alt="npm"></a>
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT">
   <img src="https://img.shields.io/badge/node-%E2%89%A520-3fb950.svg" alt="Node >= 20">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg" alt="Zero runtime dependencies">
-  <a href="https://github.com/youcefzemmar/groundtruth/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
+  <a href="https://github.com/veltiq/groundtruth/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 # groundtruth
 
-> **TL;DR** — Your AI says _"Done! I added X, fixed Y, wrote tests."_ groundtruth checks each claim against the real diff and flags the ones that never happened. One command: `npx @twarc_net/groundtruth install`.
+> **TL;DR** — Your AI says _"Done! I added X, fixed Y, wrote tests."_ groundtruth checks each claim against the real diff and flags the ones that never happened. One command: `npx @veltiq/groundtruth install`.
 
 **Catch when your AI coding assistant claims work it didn't do.**
 
@@ -62,7 +62,7 @@ It is built on one principle: **the diff doesn't lie.** Natural-language summari
 No install, no config — see it catch a phantom change against a canned transcript:
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## Install
@@ -71,22 +71,22 @@ Requires Node ≥ 20. No global install needed — the hook runs through `npx`.
 
 ```bash
 # Wire it into Claude Code as a Stop hook for this project (./.claude/settings.json)
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …or for every project (~/.claude/settings.json)
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
-Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g @twarc_net/groundtruth` first (it installs the `groundtruth` command) and `install` auto-detects it. To check the current session without installing anything:
+Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g @veltiq/groundtruth` first (it installs the `groundtruth` command) and `install` auto-detects it. To check the current session without installing anything:
 
 ```bash
-npx @twarc_net/groundtruth verify
+npx @veltiq/groundtruth verify
 ```
 
 Prefer plugins? Add the marketplace and install in one step:
 
 ```text
-/plugin marketplace add youcefzemmar/groundtruth
+/plugin marketplace add veltiq/groundtruth
 /plugin install groundtruth
 ```
 
@@ -157,7 +157,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
-      - uses: youcefzemmar/groundtruth@v0.3.0
+      - uses: veltiq/groundtruth@v0.3.0
 ```
 
 Add `with: { strict: true }` to turn it into a merge gate. Full options in [docs/github-action.md](docs/github-action.md).
@@ -169,7 +169,7 @@ Add `with: { strict: true }` to turn it into a merge gate. Full options in [docs
 ```sh
 #!/bin/sh
 # .git/hooks/commit-msg — verify the commit message against the staged diff
-npx @twarc_net/groundtruth verify --summary "$1" --staged
+npx @veltiq/groundtruth verify --summary "$1" --staged
 # add --strict to abort the commit when a claim is unsupported
 ```
 
@@ -197,7 +197,7 @@ Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` 
 Install into more hook events for multi-agent workflows:
 
 ```bash
-npx @twarc_net/groundtruth install --events Stop,SubagentStop,SessionEnd
+npx @veltiq/groundtruth install --events Stop,SubagentStop,SessionEnd
 ```
 
 `SubagentStop` checks each subagent's turn; `SessionEnd` prints a per-session digest.
@@ -229,7 +229,7 @@ groundtruth stats --all    # across every project
 Show a live count in the Claude Code status bar (`🔎 gt 3❌ ·7d`):
 
 ```bash
-npx @twarc_net/groundtruth install --statusline
+npx @veltiq/groundtruth install --statusline
 ```
 
 ## Honest limitations
@@ -241,7 +241,7 @@ npx @twarc_net/groundtruth install --statusline
 ## Use as a library
 
 ```ts
-import { runPipeline, renderMarkdown } from "@twarc_net/groundtruth";
+import { runPipeline, renderMarkdown } from "@veltiq/groundtruth";
 
 const report = runPipeline({ transcriptPath: "session.jsonl", cwd: process.cwd() });
 console.log(renderMarkdown(report));
@@ -272,10 +272,10 @@ Issues and PRs welcome — especially new claim patterns, agent adapters, and fa
 
 If groundtruth ever catches your agent in a lie, a ⭐ helps other people find it.
 
-<a href="https://star-history.com/#youcefzemmar/groundtruth&Date">
-  <img src="https://api.star-history.com/svg?repos=youcefzemmar/groundtruth&type=Date" alt="Star History Chart" width="600">
+<a href="https://star-history.com/#veltiq/groundtruth&Date">
+  <img src="https://api.star-history.com/svg?repos=veltiq/groundtruth&type=Date" alt="Star History Chart" width="600">
 </a>
 
 ## License
 
-[MIT](LICENSE) © youcefzemmar
+[MIT](LICENSE) © Veltiq

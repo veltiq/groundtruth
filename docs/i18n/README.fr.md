@@ -16,7 +16,7 @@
 
 # groundtruth
 
-> **En bref** — Votre IA dit _« Terminé ! J'ai ajouté X, corrigé Y, écrit des tests. »_ groundtruth vérifie chaque affirmation par rapport au diff réel et signale celles qui n'ont jamais eu lieu. Une commande : `npx @twarc_net/groundtruth install`.
+> **En bref** — Votre IA dit _« Terminé ! J'ai ajouté X, corrigé Y, écrit des tests. »_ groundtruth vérifie chaque affirmation par rapport au diff réel et signale celles qui n'ont jamais eu lieu. Une commande : `npx @veltiq/groundtruth install`.
 
 **Détectez quand votre assistant de code IA prétend avoir fait un travail qu'il n'a pas fait.**
 
@@ -41,7 +41,7 @@ Les « changements fantômes » — du travail que le résumé affirme mais n'im
 ## Essayez en 30 secondes
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## Installation
@@ -50,10 +50,10 @@ Nécessite Node ≥ 20. Aucune installation globale — le hook s'exécute via `
 
 ```bash
 # Installer comme Stop hook de Claude Code pour ce projet
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …ou pour tous les projets
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
 Redémarrez Claude Code (ou lancez `/hooks`) et groundtruth vérifiera chaque tour automatiquement.
@@ -80,4 +80,4 @@ La documentation complète est en anglais : [README](../../README.md) · [foncti
 
 ## Licence
 
-[MIT](../../LICENSE) © youcefzemmar
+[MIT](../../LICENSE) © Veltiq

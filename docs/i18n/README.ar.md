@@ -18,7 +18,7 @@
 
 # groundtruth
 
-> **باختصار** — يقول الذكاء الاصطناعي: _«تمّ! أضفتُ X، وأصلحتُ Y، وكتبتُ اختبارات.»_ يتحقّق groundtruth من كل ادّعاء مقابل التغيير الفعلي (diff) ويُعلِّم ما لم يحدث منها. أمر واحد: `npx @twarc_net/groundtruth install`.
+> **باختصار** — يقول الذكاء الاصطناعي: _«تمّ! أضفتُ X، وأصلحتُ Y، وكتبتُ اختبارات.»_ يتحقّق groundtruth من كل ادّعاء مقابل التغيير الفعلي (diff) ويُعلِّم ما لم يحدث منها. أمر واحد: `npx @veltiq/groundtruth install`.
 
 **اكتشف عندما يدّعي مساعد البرمجة بالذكاء الاصطناعي أنه أنجز عملاً لم ينجزه فعلاً.**
 
@@ -49,7 +49,7 @@ groundtruth — claim check
 </div>
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 <div dir="rtl">
@@ -62,10 +62,10 @@ npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --n
 
 ```bash
 # التثبيت كـ Stop hook لـ Claude Code في هذا المشروع
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …أو لكل المشاريع
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
 <div dir="rtl">
@@ -92,6 +92,6 @@ npx @twarc_net/groundtruth install --global
 
 ## الرخصة
 
-[MIT](../../LICENSE) © youcefzemmar
+[MIT](../../LICENSE) © Veltiq
 
 </div>
