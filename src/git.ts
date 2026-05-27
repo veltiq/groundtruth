@@ -10,12 +10,22 @@ import type { Evidence } from "./types.js";
  * If `cwd` is not a git repository (or git is unavailable) this returns empty
  * evidence rather than throwing — the pipeline degrades gracefully.
  */
-export function collectGitEvidence(cwd: string): Evidence {
+export function collectGitEvidence(cwd: string, base?: string): Evidence {
   const ev = emptyEvidence();
 
+  if (base) {
+    // PR / branch mode: everything that changed since the merge-base with `base`.
+    const range = `${base}...HEAD`;
+    const diff = git(["diff", range, "--no-color", "--unified=0"], cwd);
+    if (diff !== null) parseDiff(diff, ev);
+    const names = git(["diff", "--name-status", range], cwd);
+    if (names !== null) parseNameStatus(names, ev);
+    return ev;
+  }
+
+  // Working-tree mode: uncommitted changes against HEAD.
   const diff = git(["diff", "HEAD", "--no-color", "--unified=0"], cwd);
   if (diff !== null) parseDiff(diff, ev);
-
   const status = git(["status", "--porcelain"], cwd);
   if (status !== null) parseStatus(status, ev);
 
@@ -52,6 +62,19 @@ function stripDiffPath(raw: string): string {
   const t = raw.trim();
   if (t === "/dev/null") return "";
   return t.replace(/^[ab]\//, "");
+}
+
+function parseNameStatus(out: string, ev: Evidence): void {
+  for (const line of out.split("\n")) {
+    if (!line.trim()) continue;
+    const parts = line.split("\t");
+    const code = parts[0] ?? "";
+    // Renames/copies are "R100\told\tnew" — keep the destination path.
+    const path = (parts.length > 2 ? parts[parts.length - 1] : parts[1]) ?? "";
+    if (!path) continue;
+    pushUnique(ev.touchedFiles, path);
+    if (code.startsWith("A")) pushUnique(ev.createdFiles, path);
+  }
 }
 
 function parseStatus(status: string, ev: Evidence): void {

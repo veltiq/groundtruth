@@ -84,3 +84,15 @@ export interface Report {
   verdicts: Verdict[];
   summary: ReportSummary;
 }
+
+/** User configuration, from `.groundtruthrc.json` or a `groundtruth` key in package.json. */
+export interface Config {
+  /** Default for the hook: block the turn when claims are unsupported. */
+  strict?: boolean;
+  /** Claim targets to skip — case-insensitive substring, or a glob with `*`. */
+  ignore?: string[];
+  /** Whole claim kinds to skip (e.g. ["action", "command"]). */
+  ignoreKinds?: ClaimKind[];
+  /** Default output format for `verify`. */
+  output?: "terminal" | "json" | "markdown";
+}

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { c } from "./colors.js";
+import { loadConfig } from "./config.js";
 import { detectGlobalBinary, hookCommand, installHook, settingsPathFor } from "./install.js";
 import { findLatestTranscript } from "./locate.js";
 import { runPipeline } from "./pipeline.js";
@@ -39,8 +40,6 @@ async function main(argv: string[]): Promise<number> {
 
 /** `groundtruth hook` — invoked by the Claude Code Stop hook (reads JSON on stdin). */
 async function runHook(args: string[]): Promise<number> {
-  const strict = args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1";
-
   let payload: { transcript_path?: string; cwd?: string; stop_hook_active?: boolean } = {};
   try {
     payload = JSON.parse(await readStdin()) as typeof payload;
@@ -51,8 +50,11 @@ async function runHook(args: string[]): Promise<number> {
   const transcriptPath = payload.transcript_path;
   if (!transcriptPath) return 0;
   const cwd = payload.cwd ?? process.cwd();
+  const config = loadConfig(cwd);
+  const strict =
+    args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1" || config.strict === true;
 
-  const report = runPipeline({ transcriptPath, cwd });
+  const report = runPipeline({ transcriptPath, cwd, config });
   if (report.verdicts.length > 0) {
     process.stderr.write(`\n${renderTerminal(report)}`);
   }
@@ -72,31 +74,51 @@ async function runHook(args: string[]): Promise<number> {
 
 /** `groundtruth verify` — run manually against the latest (or a given) transcript. */
 function runVerify(args: string[]): number {
-  const { flags, values } = parseFlags(args, ["transcript", "cwd"]);
+  const { flags, values } = parseFlags(args, ["transcript", "cwd", "summary", "base"]);
   const cwd = values.cwd ?? process.cwd();
+  const config = loadConfig(cwd);
+  const useGit = !flags.has("no-git");
+  const gitCwd = useGit ? cwd : undefined;
 
-  let transcriptPath = values.transcript;
-  if (!transcriptPath) {
-    const found = findLatestTranscript(cwd);
-    if (!found) {
-      process.stderr.write(
-        c.red("No transcript found.\n") +
-          c.dim(
-            `Looked for the most recent Claude Code session for ${cwd}.\nPass one explicitly: groundtruth verify --transcript <path.jsonl>\n`,
-          ),
-      );
-      return 1;
+  let report: ReturnType<typeof runPipeline>;
+  if (values.summary !== undefined) {
+    // PR / description mode: grade arbitrary summary text against the diff.
+    const summary = readFileSync(values.summary, "utf8");
+    report = runPipeline({
+      turn: { summary, toolUses: [] },
+      cwd: gitCwd,
+      base: values.base,
+      config,
+    });
+  } else {
+    let transcriptPath = values.transcript;
+    if (!transcriptPath) {
+      const found = findLatestTranscript(cwd);
+      if (!found) {
+        process.stderr.write(
+          c.red("No transcript found.\n") +
+            c.dim(
+              `Looked for the most recent Claude Code session for ${cwd}.\nPass one explicitly: groundtruth verify --transcript <path.jsonl>\n`,
+            ),
+        );
+        return 1;
+      }
+      transcriptPath = found;
     }
-    transcriptPath = found;
+    report = runPipeline({ transcriptPath, cwd: gitCwd, base: values.base, config });
   }
 
-  const useGit = !flags.has("no-git");
-  const report = runPipeline({ transcriptPath, cwd: useGit ? cwd : undefined });
-  if (flags.has("json")) process.stdout.write(`${renderJson(report)}\n`);
-  else if (flags.has("markdown")) process.stdout.write(`${renderMarkdown(report)}\n`);
+  const format = flags.has("json")
+    ? "json"
+    : flags.has("markdown")
+      ? "markdown"
+      : (config.output ?? "terminal");
+  if (format === "json") process.stdout.write(`${renderJson(report)}\n`);
+  else if (format === "markdown") process.stdout.write(`${renderMarkdown(report)}\n`);
   else process.stdout.write(renderTerminal(report));
 
-  return flags.has("strict") && report.summary.unsupported > 0 ? 2 : 0;
+  const strict = flags.has("strict") || config.strict === true;
+  return strict && report.summary.unsupported > 0 ? 2 : 0;
 }
 
 /** `groundtruth install` — wire the Stop hook into Claude Code settings. */
@@ -196,6 +218,8 @@ ${c.bold("Commands")}
 
 ${c.bold("verify options")}
   --transcript <path>   Check a specific .jsonl transcript
+  --summary <file>      Grade arbitrary summary text (e.g. a PR description)
+  --base <ref>          Diff against a base ref (PR mode: base...HEAD)
   --cwd <path>          Working dir for git evidence (default: cwd)
   --no-git              Use only the transcript's tool calls as evidence
   --json | --markdown   Output format (default: pretty terminal)

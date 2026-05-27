@@ -1,0 +1,95 @@
+name: groundtruth
+description: Verify that a pull request's claims match its diff, and post the verdicts as a sticky PR comment.
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  mode:
+    description: "'pr' grades the PR description against the diff; 'transcript' grades a JSONL transcript."
+    default: pr
+  transcript:
+    description: "Path to a JSONL transcript (used when mode=transcript)."
+    default: ""
+  base:
+    description: "Base ref/SHA to diff against. Defaults to the PR base SHA."
+    default: ""
+  version:
+    description: "npm version or dist-tag of groundtruth to run."
+    default: latest
+  strict:
+    description: "Fail the job if any claim is unsupported."
+    default: "false"
+  comment:
+    description: "Post/update a sticky PR comment with the verdicts."
+    default: "true"
+  github-token:
+    description: "Token used to read/post PR comments."
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Run groundtruth
+      id: gt
+      shell: bash
+      env:
+        GT_PR_BODY: ${{ github.event.pull_request.body }}
+        GT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      run: |
+        set -euo pipefail
+        PKG="@twarc_net/groundtruth@${{ inputs.version }}"
+        BASE="${{ inputs.base }}"
+        [ -z "$BASE" ] && BASE="${GT_BASE_SHA:-}"
+
+        ARGS=(verify)
+        if [ "${{ inputs.mode }}" = "transcript" ] && [ -n "${{ inputs.transcript }}" ]; then
+          ARGS+=(--transcript "${{ inputs.transcript }}")
+        else
+          printf '%s' "${GT_PR_BODY:-}" > "$RUNNER_TEMP/gt-summary.txt"
+          ARGS+=(--summary "$RUNNER_TEMP/gt-summary.txt")
+        fi
+        [ -n "$BASE" ] && ARGS+=(--base "$BASE")
+
+        REPORT="$(npx -y "$PKG" "${ARGS[@]}" --markdown || true)"
+        printf '%s\n' "$REPORT"
+        {
+          echo 'report<<GROUNDTRUTH_EOF'
+          printf '%s\n' "$REPORT"
+          echo 'GROUNDTRUTH_EOF'
+        } >> "$GITHUB_OUTPUT"
+
+        UNSUP="$(npx -y "$PKG" "${ARGS[@]}" --json 2>/dev/null \
+          | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(String(JSON.parse(s).summary.unsupported))}catch{process.stdout.write("0")}})' \
+          || echo 0)"
+        echo "unsupported=${UNSUP:-0}" >> "$GITHUB_OUTPUT"
+
+    - name: Post sticky PR comment
+      if: ${{ inputs.comment == 'true' && github.event.pull_request.number }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        REPORT: ${{ steps.gt.outputs.report }}
+      run: |
+        set -euo pipefail
+        MARKER='<!-- groundtruth -->'
+        BODY="$(printf '%s\n\n%s' "$MARKER" "$REPORT")"
+        CID="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+          --jq "map(select(.body | startswith(\"$MARKER\"))) | .[0].id // empty" || true)"
+        if [ -n "$CID" ]; then
+          gh api -X PATCH "repos/$REPO/issues/comments/$CID" -f body="$BODY" >/dev/null
+        else
+          gh api -X POST "repos/$REPO/issues/$PR/comments" -f body="$BODY" >/dev/null
+        fi
+
+    - name: Enforce strict
+      if: ${{ inputs.strict == 'true' }}
+      shell: bash
+      run: |
+        U="${{ steps.gt.outputs.unsupported }}"
+        if [ -n "$U" ] && [ "$U" -gt 0 ]; then
+          echo "::error::groundtruth found $U unsupported claim(s) — the PR description doesn't match the diff."
+          exit 1
+        fi

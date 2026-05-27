@@ -241,8 +241,13 @@ function looksLikePath(tok: string): boolean {
   if (tok.includes(" ")) return false;
   if (SPECIAL_FILES.has(tok)) return true;
   if (/^https?:\/\//i.test(tok)) return false;
-  if (tok.includes("/")) return true;
   const ext = extOf(tok);
+  // Leading-slash tokens are routes/URLs (e.g. `/api/users`), not files —
+  // unless they carry a real file extension. Avoids false file claims.
+  if (tok.startsWith("/")) return ext !== null && CODE_EXTENSIONS.has(ext);
+  // Relative tokens with a separator are paths, with or without an extension
+  // (`src/auth.ts`, `src/auth`).
+  if (tok.includes("/")) return true;
   return ext !== null && CODE_EXTENSIONS.has(ext);
 }
 
