@@ -7,7 +7,7 @@ import { parseTranscriptFile } from "../transcript.js";
 import type { Turn } from "../types.js";
 import { parseAider } from "./aider.js";
 import { parseCodex } from "./codex.js";
-import { parseCursor } from "./cursor.js";
+import { parseCursorFile } from "./cursor.js";
 import { parseGemini } from "./gemini.js";
 import { parseOpenCode } from "./opencode.js";
 
@@ -55,10 +55,30 @@ const gemini: Adapter = {
 const cursor: Adapter = {
   name: "cursor",
   locate() {
-    return newestMatch(join(homedir(), ".cursor", "projects"), (n) => n.endsWith(".jsonl"));
+    // Prefer the newer per-project JSONL transcripts; fall back to the global
+    // SQLite store (state.vscdb) that older Cursor builds use.
+    const jsonl = newestMatch(join(homedir(), ".cursor", "projects"), (n) => n.endsWith(".jsonl"));
+    return jsonl ?? cursorStateDb();
   },
-  parse: (path) => parseCursor(readFileSync(path, "utf8")),
+  parse: (path) => parseCursorFile(path),
 };
+
+/** Locates Cursor's global SQLite store, per OS (or the CURSOR_STATE_DB override). */
+function cursorStateDb(): string | null {
+  const override = process.env.CURSOR_STATE_DB;
+  if (override) return existsSync(override) ? override : null;
+  const home = homedir();
+  let base: string;
+  if (process.platform === "darwin") {
+    base = join(home, "Library", "Application Support");
+  } else if (process.platform === "win32") {
+    base = process.env.APPDATA ?? join(home, "AppData", "Roaming");
+  } else {
+    base = process.env.XDG_CONFIG_HOME ?? join(home, ".config");
+  }
+  const db = join(base, "Cursor", "User", "globalStorage", "state.vscdb");
+  return existsSync(db) ? db : null;
+}
 
 const opencode: Adapter = {
   name: "opencode",
