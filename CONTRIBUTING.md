@@ -48,6 +48,14 @@ The core (`extractClaims`, `verifyClaims`, `buildEvidence`) is agent-agnostic.
 To support a new agent, add a transcript parser that produces a `Turn`
 (`{ summary, toolUses }`) and wire it into the pipeline.
 
+## Translations
+
+README translations live in [`docs/i18n/`](docs/i18n/) as `README.<lang>.md`. To add
+a language, copy an existing one, translate the prose (keep code/commands as-is),
+update the language bar at the top of every file to include yours, and add a link
+to the bar in the root `README.md`. Translations of the concise README are plenty —
+the full docs stay in English.
+
 ## Commit / PR conventions
 
 - Keep PRs focused and small.
