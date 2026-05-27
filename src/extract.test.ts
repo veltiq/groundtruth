@@ -77,6 +77,27 @@ describe("extractClaims", () => {
     expect(claims.filter((c) => c.kind === "symbol")).toHaveLength(1);
   });
 
+  it("handles rename: old name removed, new name added", () => {
+    const claims = extractClaims("Renamed `oldFn` to `newFn`.");
+    const from = claims.find((c) => c.target === "oldFn");
+    const to = claims.find((c) => c.target === "newFn");
+    expect(from?.polarity).toBe("remove");
+    expect(to?.polarity).toBe("add");
+  });
+
+  it("extracts the tag name from a JSX/HTML component claim", () => {
+    const claims = kinds("Added a `<Button>` component and a `</Modal>` close tag.", "symbol");
+    const targets = claims.map((c) => c.target);
+    expect(targets).toContain("Button");
+    expect(targets).toContain("Modal");
+  });
+
+  it("ignores content inside fenced code blocks", () => {
+    const summary = "Added validation.\n\n```ts\nthe `rateLimiter` lives here\n```\n";
+    const claims = extractClaims(summary);
+    expect(claims.some((c) => c.target === "rateLimiter")).toBe(false);
+  });
+
   it("extracts multiple distinct claims from one sentence", () => {
     const claims = extractClaims(
       "I added a `validateInput` function to `src/auth.ts` and updated the tests.",
