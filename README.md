@@ -1,3 +1,16 @@
+<p align="center">
+  <img src="assets/hero.svg" alt="groundtruth — catch when your AI coding assistant claims work it didn't do" width="820">
+</p>
+
+<p align="center">
+  <a href="https://github.com/youcefzemmar/groundtruth/actions/workflows/ci.yml"><img src="https://github.com/youcefzemmar/groundtruth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/groundtruth"><img src="https://img.shields.io/npm/v/groundtruth?color=cb3837&logo=npm" alt="npm"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT">
+  <img src="https://img.shields.io/badge/node-%E2%89%A520-3fb950.svg" alt="Node >= 20">
+  <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg" alt="Zero runtime dependencies">
+  <a href="https://github.com/youcefzemmar/groundtruth/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
+</p>
+
 # groundtruth
 
 **Catch when your AI coding assistant claims work it didn't do.**
@@ -30,19 +43,27 @@ Research on agentic pull requests found that **"phantom changes" — work the de
 
 It is built on one principle: **the diff doesn't lie.** Natural-language summaries are graded against deterministic facts (which files changed, which symbols appear in the added lines, whether a test file or install command actually ran), never against another model's opinion.
 
-## Install
+## Try it in 30 seconds
 
-Requires Node ≥ 20.
+No install, no config — see it catch a phantom change against a canned transcript:
 
 ```bash
-# Wire it into Claude Code as a Stop hook (writes ./.claude/settings.json)
-npx groundtruth install
-
-# …or globally for every project
-npx groundtruth install --global --npx
+npx groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
-Restart Claude Code (or run `/hooks`) and groundtruth will check every turn automatically. To verify an existing session without installing anything:
+## Install
+
+Requires Node ≥ 20. No global install needed — the hook runs through `npx`.
+
+```bash
+# Wire it into Claude Code as a Stop hook for this project (./.claude/settings.json)
+npx groundtruth install
+
+# …or for every project (~/.claude/settings.json)
+npx groundtruth install --global
+```
+
+Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g groundtruth` first and `install` auto-detects it. To check the current session without installing anything:
 
 ```bash
 npx groundtruth verify
@@ -116,6 +137,10 @@ console.log(renderMarkdown(report));
 ## Contributing
 
 Issues and PRs welcome — especially new claim patterns, agent adapters, and false-positive reports (those are gold). See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Star history
+
+If groundtruth ever catches your agent in a lie, consider [starring the repo](https://github.com/youcefzemmar/groundtruth) — it helps other people find it.
 
 ## License
 

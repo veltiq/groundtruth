@@ -42,9 +42,11 @@ describe("installHook", () => {
     expect(seeded.hooks.Stop).toBeDefined();
   });
 
-  it("uses npx form when requested", () => {
-    expect(hookCommand({ npx: true })).toBe("npx -y groundtruth hook");
-    expect(hookCommand({ strict: true })).toBe("groundtruth hook --strict");
+  it("defaults to the npx form and supports the bin + strict forms", () => {
+    expect(hookCommand({})).toBe("npx -y groundtruth hook");
+    expect(hookCommand({ bin: true })).toBe("groundtruth hook");
+    expect(hookCommand({ bin: true, strict: true })).toBe("groundtruth hook --strict");
+    expect(hookCommand({ strict: true })).toBe("npx -y groundtruth hook --strict");
   });
 
   it("targets the global settings path when --global", () => {

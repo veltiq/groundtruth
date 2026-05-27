@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="groundtruth — verify what your AI says it did against the actual diff">
+  <rect width="900" height="380" rx="16" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="899" height="379" rx="16" fill="none" stroke="#30363d"/>
+
+  <!-- wordmark -->
+  <text x="48" y="86" font-size="46" font-weight="700" fill="#e6edf3">ground<tspan fill="#3fb950">truth</tspan></text>
+  <text x="48" y="124" font-size="19" fill="#8b949e">Catch when your AI coding assistant claims work it didn&#39;t do.</text>
+
+  <!-- terminal card -->
+  <rect x="48" y="156" width="804" height="188" rx="10" fill="#010409" stroke="#30363d"/>
+  <circle cx="72" cy="180" r="5" fill="#ff5f56"/>
+  <circle cx="90" cy="180" r="5" fill="#ffbd2e"/>
+  <circle cx="108" cy="180" r="5" fill="#27c93f"/>
+  <text x="430" y="184" font-size="12" fill="#6e7681" text-anchor="middle">groundtruth — claim check</text>
+
+  <g font-size="16">
+    <text x="72" y="226"><tspan fill="#3fb950">✓ verified</tspan><tspan fill="#6e7681">     file </tspan><tspan fill="#58a6ff">src/auth.ts</tspan></text>
+    <text x="72" y="258"><tspan fill="#f85149">✕ unsupported</tspan><tspan fill="#6e7681">  symbol </tspan><tspan fill="#58a6ff">`rateLimiter`</tspan></text>
+    <text x="72" y="290"><tspan fill="#d29922">! review</tspan><tspan fill="#6e7681">       action </tspan><tspan fill="#8b949e">&#34;fixed the timeout bug&#34;</tspan></text>
+    <text x="72" y="324" fill="#6e7681">3 claims · <tspan fill="#3fb950">1 verified</tspan> · <tspan fill="#f85149">1 unsupported</tspan> · <tspan fill="#d29922">1 to review</tspan></text>
+  </g>
+</svg>

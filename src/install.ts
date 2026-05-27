@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -5,8 +6,8 @@ import { dirname, join } from "node:path";
 export interface InstallOptions {
   /** Install into the global ~/.claude/settings.json instead of the project. */
   global?: boolean;
-  /** Use `npx -y groundtruth` instead of a globally installed binary. */
-  npx?: boolean;
+  /** Invoke the globally-installed `groundtruth` binary instead of `npx`. */
+  bin?: boolean;
   /** Make the hook block when unsupported claims are found. */
   strict?: boolean;
   /** Project directory (defaults to process.cwd()). */
@@ -34,8 +35,21 @@ interface Settings {
 }
 
 export function hookCommand(opts: InstallOptions): string {
-  const base = opts.npx ? "npx -y groundtruth hook" : "groundtruth hook";
+  // Default to the npx form: it works whether or not groundtruth is installed
+  // globally, so `npx groundtruth install` produces a hook that just runs.
+  const base = opts.bin ? "groundtruth hook" : "npx -y groundtruth hook";
   return opts.strict ? `${base} --strict` : base;
+}
+
+/** True if a `groundtruth` binary is already resolvable on PATH. */
+export function detectGlobalBinary(): boolean {
+  const probe = process.platform === "win32" ? "where" : "which";
+  try {
+    execFileSync(probe, ["groundtruth"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function settingsPathFor(opts: InstallOptions): string {

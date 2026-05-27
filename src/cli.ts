@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { c } from "./colors.js";
-import { hookCommand, installHook, settingsPathFor } from "./install.js";
+import { detectGlobalBinary, hookCommand, installHook, settingsPathFor } from "./install.js";
 import { findLatestTranscript } from "./locate.js";
 import { runPipeline } from "./pipeline.js";
 import { renderJson, renderMarkdown, renderTerminal } from "./report.js";
@@ -41,7 +41,7 @@ async function main(argv: string[]): Promise<number> {
 async function runHook(args: string[]): Promise<number> {
   const strict = args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1";
 
-  let payload: { transcript_path?: string; cwd?: string } = {};
+  let payload: { transcript_path?: string; cwd?: string; stop_hook_active?: boolean } = {};
   try {
     payload = JSON.parse(await readStdin()) as typeof payload;
   } catch {
@@ -57,7 +57,9 @@ async function runHook(args: string[]): Promise<number> {
     process.stderr.write(`\n${renderTerminal(report)}`);
   }
 
-  if (strict && report.summary.unsupported > 0) {
+  // Never block twice in a row — avoids a strict-mode loop if the agent can't
+  // satisfy the check.
+  if (strict && !payload.stop_hook_active && report.summary.unsupported > 0) {
     process.stderr.write(
       c.red(
         `groundtruth: ${report.summary.unsupported} unsupported claim(s) — verify before continuing.\n`,
@@ -100,9 +102,12 @@ function runVerify(args: string[]): number {
 /** `groundtruth install` — wire the Stop hook into Claude Code settings. */
 function runInstall(args: string[]): number {
   const { flags, values } = parseFlags(args, ["cwd"]);
+  // Prefer the global binary if one is on PATH (faster per turn); otherwise use
+  // npx (always works). Explicit --bin / --npx override the detection.
+  const useBin = flags.has("bin") || (!flags.has("npx") && detectGlobalBinary());
   const opts = {
     global: flags.has("global"),
-    npx: flags.has("npx"),
+    bin: useBin,
     strict: flags.has("strict"),
     cwd: values.cwd,
   };
@@ -198,7 +203,8 @@ ${c.bold("verify options")}
 
 ${c.bold("install options")}
   --global              Install into ~/.claude/settings.json (default: ./.claude)
-  --npx                 Use "npx -y groundtruth" instead of a global binary
+  --bin                 Invoke the global "groundtruth" binary (auto-detected)
+  --npx                 Force the "npx -y groundtruth" form
   --strict              Make the hook block on unsupported claims
   --print               Print the settings snippet instead of writing it
 
