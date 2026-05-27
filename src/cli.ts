@@ -16,7 +16,7 @@ import {
 } from "./install.js";
 import { type LedgerSummary, buildStats, readLedger, recordRun, summarize } from "./ledger.js";
 import { runPipeline } from "./pipeline.js";
-import { renderJson, renderMarkdown, renderTerminal } from "./report.js";
+import { renderJson, renderMarkdown, renderSarif, renderTerminal } from "./report.js";
 import type { Turn } from "./types.js";
 
 const VERSION = readVersion();
@@ -163,12 +163,15 @@ function runVerify(args: string[]): number {
     config,
   });
 
-  const format = flags.has("json")
-    ? "json"
-    : flags.has("markdown")
-      ? "markdown"
-      : (config.output ?? "terminal");
-  if (format === "json") process.stdout.write(`${renderJson(report)}\n`);
+  const format = flags.has("sarif")
+    ? "sarif"
+    : flags.has("json")
+      ? "json"
+      : flags.has("markdown")
+        ? "markdown"
+        : (config.output ?? "terminal");
+  if (format === "sarif") process.stdout.write(`${renderSarif(report, { version: VERSION })}\n`);
+  else if (format === "json") process.stdout.write(`${renderJson(report)}\n`);
   else if (format === "markdown") process.stdout.write(`${renderMarkdown(report)}\n`);
   else process.stdout.write(renderTerminal(report));
 
@@ -369,6 +372,7 @@ ${c.bold("verify options")}
   --cwd <path>          Working dir for git evidence (default: cwd)
   --no-git              Use only the transcript's tool calls as evidence
   --json | --markdown   Output format (default: pretty terminal)
+  --sarif               Emit SARIF 2.1.0 for GitHub code scanning
   --strict              Exit non-zero if any claim is unsupported
 
 ${c.bold("install options")}
