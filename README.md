@@ -11,7 +11,21 @@
   <a href="https://github.com/youcefzemmar/groundtruth/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
 </p>
 
+<p align="center">
+  <b>English</b> ·
+  <a href="docs/i18n/README.zh-CN.md">简体中文</a> ·
+  <a href="docs/i18n/README.es.md">Español</a> ·
+  <a href="docs/i18n/README.pt-BR.md">Português</a> ·
+  <a href="docs/i18n/README.fr.md">Français</a> ·
+  <a href="docs/i18n/README.de.md">Deutsch</a> ·
+  <a href="docs/i18n/README.ja.md">日本語</a> ·
+  <a href="docs/i18n/README.ru.md">Русский</a> ·
+  <a href="docs/i18n/README.ar.md">العربية</a>
+</p>
+
 # groundtruth
+
+> **TL;DR** — Your AI says _"Done! I added X, fixed Y, wrote tests."_ groundtruth checks each claim against the real diff and flags the ones that never happened. One command: `npx @twarc_net/groundtruth install`.
 
 **Catch when your AI coding assistant claims work it didn't do.**
 
@@ -134,13 +148,34 @@ const report = runPipeline({ transcriptPath: "session.jsonl", cwd: process.cwd()
 console.log(renderMarkdown(report));
 ```
 
+## FAQ
+
+**Does it send my code anywhere?**
+No. It runs entirely locally — reads your transcript and `git`, writes nothing except when you run `install`. Zero network calls, zero runtime dependencies.
+
+**Will it block my commits or get in the way?**
+No. By default it just prints a report and exits cleanly. Blocking is strictly opt-in (`--strict`).
+
+**Isn't this what tests are for?**
+Tests catch code that's _wrong_. groundtruth catches code that was _never written_ but reported as done — there's nothing for a test to run. They're complementary.
+
+**Does it work with Cursor / other agents?**
+The engine is format-agnostic; today it ships a Claude Code transcript adapter. Adapters for other agents are a great first contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Will it falsely accuse me?**
+It's tuned hard against that. A claim is only `unsupported` when it's concretely checkable and nothing supports it; everything fuzzy is shown as advisory, never a failure.
+
 ## Contributing
 
 Issues and PRs welcome — especially new claim patterns, agent adapters, and false-positive reports (those are gold). See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Star history
 
-If groundtruth ever catches your agent in a lie, consider [starring the repo](https://github.com/youcefzemmar/groundtruth) — it helps other people find it.
+If groundtruth ever catches your agent in a lie, a ⭐ helps other people find it.
+
+<a href="https://star-history.com/#youcefzemmar/groundtruth&Date">
+  <img src="https://api.star-history.com/svg?repos=youcefzemmar/groundtruth&type=Date" alt="Star History Chart" width="600">
+</a>
 
 ## License
 
