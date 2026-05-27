@@ -7,6 +7,7 @@
 export type * from "./types.js";
 export { parseTranscript, parseTranscriptFile } from "./transcript.js";
 export { extractClaims } from "./extract.js";
+export { loadConfig, applyConfig } from "./config.js";
 export { buildEvidence, emptyEvidence, mergeEvidence } from "./evidence.js";
 export { collectGitEvidence } from "./git.js";
 export { verifyClaims } from "./verify.js";

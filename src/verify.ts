@@ -116,7 +116,23 @@ function fileMatches(claimPath: string, actual: string): boolean {
   if (b.endsWith(`/${a}`) || a.endsWith(`/${b}`)) return true;
   if (!a.includes("/") && base(b) === a) return true;
   if (!b.includes("/") && base(a) === b) return true;
+  // When the claim omits the extension ("src/auth" vs "src/auth.ts"), match on
+  // the extensionless path so honest references aren't flagged unsupported.
+  if (!hasExt(a)) {
+    const bNoExt = stripExt(b);
+    if (a === bNoExt) return true;
+    if (bNoExt.endsWith(`/${a}`)) return true;
+    if (!a.includes("/") && base(bNoExt) === a) return true;
+  }
   return false;
+}
+
+function hasExt(path: string): boolean {
+  return /\.[A-Za-z0-9]+$/.test(base(path));
+}
+
+function stripExt(path: string): string {
+  return path.replace(/\.[A-Za-z0-9]+$/, "");
 }
 
 function identifierPresent(haystack: string, id: string): boolean {
