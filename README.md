@@ -173,6 +173,20 @@ npx @veltiq/groundtruth verify --summary "$1" --staged
 # add --strict to abort the commit when a claim is unsupported
 ```
 
+Prefer [pre-commit](https://pre-commit.com)? Add this to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/veltiq/groundtruth
+    rev: v0.5.0
+    hooks:
+      - id: groundtruth
+        verbose: true          # show the report even when nothing fails
+        # args: ["--strict"]   # and abort the commit on an unsupported claim
+```
+
+Then `pre-commit install --hook-type commit-msg`.
+
 ## Configuration
 
 Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` key in package.json):
