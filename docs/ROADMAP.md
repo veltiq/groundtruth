@@ -6,7 +6,7 @@ analysis. Tactics are ordered by impact-for-effort.
 
 ## Status
 
-- **v0.1.0** — published to npm (`@twarc_net/groundtruth`), Stop hook + CLI.
+- **v0.1.0** — published to npm (`@veltiq/groundtruth`), Stop hook + CLI.
 - **v0.2.0** — GitHub Action (PR claim-check + sticky comment), config file,
   Claude Code plugin manifest, precision fixes, `verify --summary/--base`,
   `stats`/`statusline` + local ledger, extra hook events (SubagentStop/SessionEnd),

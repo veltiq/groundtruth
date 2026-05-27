@@ -16,7 +16,7 @@
 
 # groundtruth
 
-> **Коротко** — ИИ говорит _«Готово! Добавил X, исправил Y, написал тесты.»_ groundtruth сверяет каждое утверждение с реальным diff и помечает те, которых не было. Одна команда: `npx @twarc_net/groundtruth install`.
+> **Коротко** — ИИ говорит _«Готово! Добавил X, исправил Y, написал тесты.»_ groundtruth сверяет каждое утверждение с реальным diff и помечает те, которых не было. Одна команда: `npx @veltiq/groundtruth install`.
 
 **Узнайте, когда ваш ИИ-ассистент заявляет о работе, которую на самом деле не сделал.**
 
@@ -41,7 +41,7 @@ groundtruth — claim check
 ## Попробуйте за 30 секунд
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## Установка
@@ -50,10 +50,10 @@ npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --n
 
 ```bash
 # Установить как Stop-хук Claude Code для этого проекта
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …или для всех проектов
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
 Перезапустите Claude Code (или выполните `/hooks`), и groundtruth будет проверять каждый ход автоматически.
@@ -80,4 +80,4 @@ npx @twarc_net/groundtruth install --global
 
 ## Лицензия
 
-[MIT](../../LICENSE) © youcefzemmar
+[MIT](../../LICENSE) © Veltiq

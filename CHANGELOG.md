@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0]
+
+### Changed
+
+- **Renamed the package to `@veltiq/groundtruth`** (previously
+  `@twarc_net/groundtruth`) as the project moved to the
+  [Veltiq](https://veltiq.net) organization. Update your hook and CI to
+  `npx -y @veltiq/groundtruth …`, and the GitHub Action to
+  `veltiq/groundtruth@v0.4.0`. The CLI binary name is unchanged
+  (`groundtruth`). The old package is deprecated with a pointer to the new name.
+
 ## [0.3.0]
 
 ### Added
@@ -17,7 +28,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **GitHub Action** (`youcefzemmar/groundtruth@v0.3.0`) that grades a PR's
+- **GitHub Action** (`veltiq/groundtruth@v0.3.0`) that grades a PR's
   description against its diff and posts a sticky PR comment; optional `strict`
   merge gate. See [docs/github-action.md](docs/github-action.md).
 - **PR / summary mode**: `verify --summary <file> --base <ref>` grades arbitrary

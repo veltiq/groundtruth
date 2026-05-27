@@ -16,7 +16,7 @@
 
 # groundtruth
 
-> **一句话** — 你的 AI 说“完成！我添加了 X、修复了 Y、写了测试。”groundtruth 会对照真实 diff 逐条核对，并标出那些根本没发生的声明。一条命令：`npx @twarc_net/groundtruth install`。
+> **一句话** — 你的 AI 说“完成！我添加了 X、修复了 Y、写了测试。”groundtruth 会对照真实 diff 逐条核对，并标出那些根本没发生的声明。一条命令：`npx @veltiq/groundtruth install`。
 
 **在 AI 编程助手谎称完成了某项工作时，及时发现。**
 
@@ -41,7 +41,7 @@ groundtruth — claim check
 ## 30 秒试用
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## 安装
@@ -50,10 +50,10 @@ npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --n
 
 ```bash
 # 作为 Claude Code 的 Stop hook 安装到当前项目
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …或对所有项目生效
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
 重启 Claude Code（或运行 `/hooks`），groundtruth 就会自动检查每一轮对话。
@@ -80,4 +80,4 @@ npx @twarc_net/groundtruth install --global
 
 ## 许可证
 
-[MIT](../../LICENSE) © youcefzemmar
+[MIT](../../LICENSE) © Veltiq
