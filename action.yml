@@ -38,7 +38,7 @@ runs:
         GT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: |
         set -euo pipefail
-        PKG="@twarc_net/groundtruth@${{ inputs.version }}"
+        PKG="@veltiq/groundtruth@${{ inputs.version }}"
         BASE="${{ inputs.base }}"
         [ -z "$BASE" ] && BASE="${GT_BASE_SHA:-}"
 

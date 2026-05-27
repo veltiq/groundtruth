@@ -52,10 +52,10 @@ describe("installHook", () => {
   });
 
   it("defaults to the npx form and supports the bin + strict forms", () => {
-    expect(hookCommand({})).toBe("npx -y @twarc_net/groundtruth hook");
+    expect(hookCommand({})).toBe("npx -y @veltiq/groundtruth hook");
     expect(hookCommand({ bin: true })).toBe("groundtruth hook");
     expect(hookCommand({ bin: true, strict: true })).toBe("groundtruth hook --strict");
-    expect(hookCommand({ strict: true })).toBe("npx -y @twarc_net/groundtruth hook --strict");
+    expect(hookCommand({ strict: true })).toBe("npx -y @veltiq/groundtruth hook --strict");
   });
 
   it("targets the global settings path when --global", () => {

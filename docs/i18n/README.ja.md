@@ -16,7 +16,7 @@
 
 # groundtruth
 
-> **要約** — AI が「完了！X を追加、Y を修正、テストも書きました」と言う。groundtruth は各主張を実際の diff と照合し、実際には行われなかったものを指摘します。コマンド一つ：`npx @twarc_net/groundtruth install`。
+> **要約** — AI が「完了！X を追加、Y を修正、テストも書きました」と言う。groundtruth は各主張を実際の diff と照合し、実際には行われなかったものを指摘します。コマンド一つ：`npx @veltiq/groundtruth install`。
 
 **AI コーディングアシスタントが、やっていない作業を「やった」と主張したときに見つけ出す。**
 
@@ -41,7 +41,7 @@ groundtruth — claim check
 ## 30 秒で試す
 
 ```bash
-npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## インストール
@@ -50,10 +50,10 @@ Node ≥ 20 が必要です。グローバルインストールは不要——�
 
 ```bash
 # このプロジェクトの Claude Code Stop フックとしてインストール
-npx @twarc_net/groundtruth install
+npx @veltiq/groundtruth install
 
 # …またはすべてのプロジェクトに
-npx @twarc_net/groundtruth install --global
+npx @veltiq/groundtruth install --global
 ```
 
 Claude Code を再起動（または `/hooks` を実行）すると、groundtruth が毎ターン自動でチェックします。
@@ -80,4 +80,4 @@ Claude Code を再起動（または `/hooks` を実行）すると、groundtrut
 
 ## ライセンス
 
-[MIT](../../LICENSE) © Yamada
+[MIT](../../LICENSE) © Veltiq

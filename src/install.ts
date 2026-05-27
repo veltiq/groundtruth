@@ -54,9 +54,9 @@ export interface StatuslineResult {
 
 export function hookCommand(opts: InstallOptions): string {
   // Default to the npx form: it works whether or not the package is installed
-  // globally, so `npx @twarc_net/groundtruth install` produces a hook that runs.
+  // globally, so `npx @veltiq/groundtruth install` produces a hook that runs.
   // The global binary is named `groundtruth` regardless of the package scope.
-  const base = opts.bin ? "groundtruth hook" : "npx -y @twarc_net/groundtruth hook";
+  const base = opts.bin ? "groundtruth hook" : "npx -y @veltiq/groundtruth hook";
   return opts.strict ? `${base} --strict` : base;
 }
 
@@ -116,7 +116,7 @@ export function installHook(opts: InstallOptions): InstallResult {
  */
 export function installStatusline(opts: InstallOptions): StatuslineResult {
   const settingsPath = settingsPathFor(opts);
-  const command = opts.bin ? "groundtruth statusline" : "npx -y @twarc_net/groundtruth statusline";
+  const command = opts.bin ? "groundtruth statusline" : "npx -y @veltiq/groundtruth statusline";
   const settings = readSettings(settingsPath);
   const current = settings.statusLine?.command;
 
