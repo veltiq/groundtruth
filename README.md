@@ -142,7 +142,7 @@ Full details in [`docs/claim-types.md`](docs/claim-types.md).
 
 ## Use in CI (GitHub Action)
 
-Post claim verdicts as a sticky comment on every PR — grading the **PR description against the diff**, so it works on any PR with zero agent setup:
+Post claim verdicts as a sticky comment on every PR — grading the **PR description against the diff**, so it works on any PR with zero agent setup. (groundtruth runs this on its own PRs.)
 
 ```yaml
 # .github/workflows/groundtruth.yml

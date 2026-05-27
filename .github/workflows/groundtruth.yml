@@ -1,0 +1,19 @@
+name: groundtruth
+
+# Dogfood: groundtruth checks its own PRs. It grades each PR description against
+# the diff and posts a sticky comment — advisory (never blocks merges here).
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claim-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./
