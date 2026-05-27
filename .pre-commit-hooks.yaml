@@ -1,0 +1,21 @@
+# groundtruth — https://github.com/veltiq/groundtruth
+# A pre-commit (https://pre-commit.com) hook that grades the commit message's
+# claims against what's actually staged. Runs on the `commit-msg` stage, where
+# pre-commit passes the commit-message file as the final argument (consumed by
+# `--summary`).
+#
+# Add to your .pre-commit-config.yaml:
+#   repos:
+#     - repo: https://github.com/veltiq/groundtruth
+#       rev: v0.5.0
+#       hooks:
+#         - id: groundtruth
+#           verbose: true          # show the report even when nothing fails
+#           # args: ["--strict"]   # and abort the commit on an unsupported claim
+- id: groundtruth
+  name: groundtruth (claim check)
+  description: Verify the commit message's claims against the staged diff.
+  entry: groundtruth verify --staged --summary
+  language: node
+  stages: [commit-msg]
+  minimum_pre_commit_version: "2.9.0"

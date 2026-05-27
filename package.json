@@ -1,6 +1,6 @@
 {
   "name": "@veltiq/groundtruth",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Catch when your AI coding assistant claims work it didn't do. Verifies the end-of-turn summary against the actual diff.",
   "keywords": [
     "claude",
@@ -49,7 +49,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "check": "biome check . && tsc --noEmit && vitest run",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

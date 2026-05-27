@@ -28,6 +28,19 @@ export interface LedgerSummary {
   unverifiable: number;
 }
 
+/** A point-in-time stats snapshot over a project (or all projects). */
+export interface StatsReport {
+  /** "project" when scoped to one cwd, "all" when aggregated. */
+  scope: "project" | "all";
+  /** The project path when scoped, otherwise null. */
+  project: string | null;
+  /** When this snapshot was produced (ISO). */
+  generatedAt: string;
+  week: LedgerSummary;
+  month: LedgerSummary;
+  allTime: LedgerSummary;
+}
+
 export function ledgerPath(): string {
   return process.env.GROUNDTRUTH_LEDGER ?? join(homedir(), ".groundtruth", "ledger.jsonl");
 }
@@ -89,6 +102,25 @@ export function summarize(
     sum.unverifiable += e.r;
   }
   return sum;
+}
+
+/**
+ * Builds the 7d / 30d / all-time snapshot used by `groundtruth stats`. Scoped to
+ * a single project by default; pass `all` to aggregate across every project.
+ */
+export function buildStats(
+  entries: LedgerEntry[],
+  opts: { cwd?: string; all?: boolean } = {},
+): StatsReport {
+  const cwd = opts.all ? undefined : opts.cwd;
+  return {
+    scope: opts.all ? "all" : "project",
+    project: cwd ?? null,
+    generatedAt: new Date().toISOString(),
+    week: summarize(entries, { cwd, sinceDays: 7 }),
+    month: summarize(entries, { cwd, sinceDays: 30 }),
+    allTime: summarize(entries, { cwd }),
+  };
 }
 
 function isEntry(v: unknown): v is LedgerEntry {

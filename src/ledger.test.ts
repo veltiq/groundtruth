@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { readLedger, recordRun, summarize } from "./ledger.js";
+import { buildStats, readLedger, recordRun, summarize } from "./ledger.js";
 import type { Report } from "./types.js";
 
 let dir: string;
@@ -68,5 +68,36 @@ describe("ledger", () => {
   it("returns empty for a missing ledger", () => {
     process.env.GROUNDTRUTH_LEDGER = join(dir, "nope.jsonl");
     expect(readLedger()).toEqual([]);
+  });
+});
+
+describe("buildStats", () => {
+  it("scopes to a project by default", () => {
+    recordRun(report(2, 1, 0), "/proj/a");
+    recordRun(report(9, 9, 9), "/proj/b");
+    const stats = buildStats(readLedger(), { cwd: "/proj/a" });
+    expect(stats.scope).toBe("project");
+    expect(stats.project).toBe("/proj/a");
+    expect(stats.allTime).toMatchObject({ runs: 1, verified: 2, unsupported: 1 });
+    expect(stats.week).toMatchObject({ runs: 1, verified: 2 });
+  });
+
+  it("aggregates across all projects when all=true", () => {
+    recordRun(report(2, 1, 0), "/proj/a");
+    recordRun(report(1, 0, 3), "/proj/b");
+    const stats = buildStats(readLedger(), { cwd: "/proj/a", all: true });
+    expect(stats.scope).toBe("all");
+    expect(stats.project).toBeNull();
+    expect(stats.allTime).toMatchObject({ runs: 2, verified: 3, unsupported: 1, unverifiable: 3 });
+  });
+
+  it("emits a stable, JSON-serializable shape", () => {
+    recordRun(report(1, 0, 0), "/proj/a");
+    const stats = buildStats(readLedger(), { cwd: "/proj/a" });
+    expect(Object.keys(stats).sort()).toEqual(
+      ["allTime", "generatedAt", "month", "project", "scope", "week"].sort(),
+    );
+    expect(() => JSON.parse(JSON.stringify(stats))).not.toThrow();
+    expect(Date.parse(stats.generatedAt)).not.toBeNaN();
   });
 });
