@@ -1,8 +1,8 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { hookCommand, installHook, settingsPathFor } from "./install.js";
+import { hookCommand, installHook, installStatusline, settingsPathFor } from "./install.js";
 
 let dir: string;
 
@@ -51,5 +51,28 @@ describe("installHook", () => {
 
   it("targets the global settings path when --global", () => {
     expect(settingsPathFor({ global: true })).toContain(join(".claude", "settings.json"));
+  });
+});
+
+describe("installStatusline", () => {
+  it("sets the status-bar line when none exists", () => {
+    const result = installStatusline({ cwd: dir });
+    expect(result.changed).toBe(true);
+    const settings = JSON.parse(readFileSync(result.settingsPath, "utf8"));
+    expect(settings.statusLine.command).toContain("groundtruth statusline");
+  });
+
+  it("never clobbers an existing non-groundtruth statusLine", () => {
+    installHook({ cwd: dir }); // create settings file
+    const path = join(dir, ".claude", "settings.json");
+    const settings = JSON.parse(readFileSync(path, "utf8"));
+    settings.statusLine = { type: "command", command: "my-custom-statusline" };
+    writeFileSync(path, JSON.stringify(settings));
+
+    const result = installStatusline({ cwd: dir });
+    expect(result.changed).toBe(false);
+    expect(result.existing).toBe("my-custom-statusline");
+    const after = JSON.parse(readFileSync(path, "utf8"));
+    expect(after.statusLine.command).toBe("my-custom-statusline");
   });
 });
