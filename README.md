@@ -199,6 +199,8 @@ The Stop hook is Claude Code-specific, but `verify` reads other agents' transcri
 groundtruth verify --agent codex     # OpenAI Codex CLI
 groundtruth verify --agent gemini    # Gemini CLI
 groundtruth verify --agent cursor    # Cursor (agent-transcripts)
+groundtruth verify --agent opencode  # OpenCode
+groundtruth verify --agent aider     # Aider (best-effort)
 groundtruth verify --agent auto      # pick the most recent across all
 ```
 

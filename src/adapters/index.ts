@@ -5,9 +5,11 @@ import { join } from "node:path";
 import { findLatestTranscript } from "../locate.js";
 import { parseTranscriptFile } from "../transcript.js";
 import type { Turn } from "../types.js";
+import { parseAider } from "./aider.js";
 import { parseCodex } from "./codex.js";
 import { parseCursor } from "./cursor.js";
 import { parseGemini } from "./gemini.js";
+import { parseOpenCode } from "./opencode.js";
 
 export interface Adapter {
   name: string;
@@ -58,7 +60,34 @@ const cursor: Adapter = {
   parse: (path) => parseCursor(readFileSync(path, "utf8")),
 };
 
-export const ADAPTERS: Record<string, Adapter> = { claude, codex, gemini, cursor };
+const opencode: Adapter = {
+  name: "opencode",
+  locate() {
+    const base = process.env.XDG_DATA_HOME
+      ? join(process.env.XDG_DATA_HOME, "opencode")
+      : join(homedir(), ".local", "share", "opencode");
+    return newestMatch(join(base, "storage", "message"), (n) => n.endsWith(".json"));
+  },
+  parse: (path) => parseOpenCode(path),
+};
+
+const aider: Adapter = {
+  name: "aider",
+  locate(cwd) {
+    const file = join(cwd, ".aider.chat.history.md");
+    return existsSync(file) ? file : null;
+  },
+  parse: (path) => parseAider(readFileSync(path, "utf8")),
+};
+
+export const ADAPTERS: Record<string, Adapter> = {
+  claude,
+  codex,
+  gemini,
+  cursor,
+  opencode,
+  aider,
+};
 export const AGENT_NAMES = Object.keys(ADAPTERS);
 
 export function getAdapter(name: string): Adapter | null {
@@ -120,3 +149,5 @@ function walk(
 export { parseCodex } from "./codex.js";
 export { parseGemini } from "./gemini.js";
 export { parseCursor } from "./cursor.js";
+export { parseOpenCode } from "./opencode.js";
+export { parseAider } from "./aider.js";
