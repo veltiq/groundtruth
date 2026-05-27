@@ -12,7 +12,11 @@ analysis. Tactics are ordered by impact-for-effort.
   `stats`/`statusline` + local ledger, extra hook events (SubagentStop/SessionEnd),
   gate config (`failOn`/`shadow`), rename/JSX/code-fence extraction, and
   multi-agent adapters (Codex, Gemini, Cursor). Most of P1 below is now shipped.
-- **Next** — OpenCode + Aider adapters; the metrics dashboard; pre-commit recipe.
+- **v0.5.0** — `verify --sarif` (GitHub code scanning), `stats --json` (dashboards),
+  `.pre-commit-hooks.yaml` (pre-commit framework), and the Cursor `state.vscdb`
+  SQLite adapter. Clears the rest of P1/P2 below except the hosted dashboard.
+- **Next** — the metrics dashboard (now that `stats --json` feeds it); submit the
+  plugin to the community marketplace; submit to awesome-claude-code.
 
 ## Growth playbook (ranked)
 
@@ -81,10 +85,11 @@ analysis. Tactics are ordered by impact-for-effort.
   adoption.
 
 **P2 — later**
-- Local metrics ("phantom-claim rate over time") — a shareable, novel stat.
-- pre-commit / lefthook recipe for non-Claude-Code users.
-- SARIF output — deferred (only helps public repos / GitHub Advanced Security;
-  the PR comment already delivers the visibility).
+- Local metrics ("phantom-claim rate over time") — ✅ groundwork: `stats --json`
+  (v0.5) emits the per-window tallies; the shareable dashboard is the next step.
+- ✅ pre-commit recipe for non-Claude-Code users (`.pre-commit-hooks.yaml`, v0.5).
+  lefthook/husky still welcome.
+- ✅ SARIF output (`verify --sarif`, v0.5) for GitHub code scanning.
 - Optional `git notes` / commit-trailer provenance — speculative.
 
 ## Monetization (later, don't gate anything now)
