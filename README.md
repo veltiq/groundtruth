@@ -179,6 +179,21 @@ Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` 
 - **`ignoreKinds`** — whole claim kinds to skip (`file`, `symbol`, `test`, `dependency`, `command`, `action`).
 - **`strict`** / **`output`** — defaults for blocking and output format.
 
+## Stats & status bar
+
+The hook keeps a privacy-safe local tally (counts only — never code or prompts, in `~/.groundtruth/ledger.jsonl`):
+
+```bash
+groundtruth stats          # this project: turns, verified, unsupported, to-review (7d/30d/all)
+groundtruth stats --all    # across every project
+```
+
+Show a live count in the Claude Code status bar (`🔎 gt 3❌ ·7d`):
+
+```bash
+npx @twarc_net/groundtruth install --statusline
+```
+
 ## Honest limitations
 
 - It verifies that claimed work **exists in the diff**, not that it is **correct**. _"Fixed the bug"_ can be confirmed to touch the right code; it cannot be confirmed to actually fix anything. That's what tests are for.

@@ -29,9 +29,21 @@ interface HookMatcher {
   matcher?: string;
   hooks?: HookHandler[];
 }
+interface StatusLine {
+  type?: string;
+  command?: string;
+}
 interface Settings {
   hooks?: Record<string, HookMatcher[]>;
+  statusLine?: StatusLine;
   [key: string]: unknown;
+}
+
+export interface StatuslineResult {
+  settingsPath: string;
+  command: string;
+  changed: boolean;
+  existing?: string;
 }
 
 export function hookCommand(opts: InstallOptions): string {
@@ -86,6 +98,28 @@ export function installHook(opts: InstallOptions): InstallResult {
   stop.push({ hooks: [{ type: "command", command }] });
   writeSettings(settingsPath, settings);
   return { settingsPath, command, changed: true, alreadyPresent: false };
+}
+
+/**
+ * Wires the status-bar line into settings, but never clobbers an existing one
+ * (statusLine is a single command). Returns `changed: false` with `existing`
+ * set when the user already has a different statusLine.
+ */
+export function installStatusline(opts: InstallOptions): StatuslineResult {
+  const settingsPath = settingsPathFor(opts);
+  const command = opts.bin ? "groundtruth statusline" : "npx -y @twarc_net/groundtruth statusline";
+  const settings = readSettings(settingsPath);
+  const current = settings.statusLine?.command;
+
+  if (current && !current.includes("groundtruth")) {
+    return { settingsPath, command, changed: false, existing: current };
+  }
+  if (current?.includes("groundtruth")) {
+    return { settingsPath, command, changed: false };
+  }
+  settings.statusLine = { type: "command", command };
+  writeSettings(settingsPath, settings);
+  return { settingsPath, command, changed: true };
 }
 
 function readSettings(path: string): Settings {
