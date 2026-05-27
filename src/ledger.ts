@@ -75,12 +75,13 @@ export function readLedger(): LedgerEntry[] {
 
 export function summarize(
   entries: LedgerEntry[],
-  opts: { cwd?: string; sinceDays?: number } = {},
+  opts: { cwd?: string; sinceDays?: number; session?: string } = {},
 ): LedgerSummary {
   const cutoff = opts.sinceDays !== undefined ? Date.now() - opts.sinceDays * 86_400_000 : 0;
   const sum: LedgerSummary = { runs: 0, verified: 0, unsupported: 0, unverifiable: 0 };
   for (const e of entries) {
     if (opts.cwd && e.cwd !== opts.cwd) continue;
+    if (opts.session && e.session !== opts.session) continue;
     if (cutoff && Date.parse(e.t) < cutoff) continue;
     sum.runs += 1;
     sum.verified += e.v;

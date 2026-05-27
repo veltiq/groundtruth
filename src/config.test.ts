@@ -2,8 +2,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { applyConfig, loadConfig } from "./config.js";
-import type { Claim } from "./types.js";
+import { applyConfig, failingCount, loadConfig } from "./config.js";
+import type { Claim, Report } from "./types.js";
 
 let dir: string;
 beforeEach(() => {
@@ -94,5 +94,34 @@ describe("applyConfig", () => {
     const out = applyConfig(claims, { ignore: ["src/*"] });
     expect(out.some((c) => c.target === "src/auth.ts")).toBe(false);
     expect(out.some((c) => c.target === "README.md")).toBe(true);
+  });
+});
+
+describe("failingCount", () => {
+  const report = (u: number, r: number): Report => ({
+    verdicts: [],
+    summary: { verified: 1, unsupported: u, unverifiable: r, total: 1 + u + r },
+  });
+
+  it("defaults to counting only unsupported", () => {
+    expect(failingCount(report(2, 3), {})).toBe(2);
+  });
+
+  it("counts unverifiable too when failOn includes it", () => {
+    expect(failingCount(report(2, 3), { failOn: ["unsupported", "unverifiable"] })).toBe(5);
+  });
+
+  it("can be set to fail on nothing", () => {
+    expect(failingCount(report(2, 3), { failOn: [] })).toBe(0);
+  });
+
+  it("reads failOn and shadow from config files", () => {
+    writeFileSync(
+      join(dir, ".groundtruthrc.json"),
+      JSON.stringify({ failOn: ["unsupported", "unverifiable"], shadow: true }),
+    );
+    const cfg = loadConfig(dir);
+    expect(cfg.failOn).toEqual(["unsupported", "unverifiable"]);
+    expect(cfg.shadow).toBe(true);
   });
 });

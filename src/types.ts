@@ -85,10 +85,17 @@ export interface Report {
   summary: ReportSummary;
 }
 
+/** Verdict levels that can cause a strict failure. */
+export type FailLevel = "unsupported" | "unverifiable";
+
 /** User configuration, from `.groundtruthrc.json` or a `groundtruth` key in package.json. */
 export interface Config {
-  /** Default for the hook: block the turn when claims are unsupported. */
+  /** Default for the hook: block the turn when claims fail. */
   strict?: boolean;
+  /** Which verdict levels count as a failure in strict mode (default: ["unsupported"]). */
+  failOn?: FailLevel[];
+  /** Shadow mode: record to the ledger but never print or block. For gradual rollout. */
+  shadow?: boolean;
   /** Claim targets to skip — case-insensitive substring, or a glob with `*`. */
   ignore?: string[];
   /** Whole claim kinds to skip (e.g. ["action", "command"]). */

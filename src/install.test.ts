@@ -34,6 +34,15 @@ describe("installHook", () => {
     expect(settings.hooks.Stop).toHaveLength(1);
   });
 
+  it("installs into multiple events when requested", () => {
+    const result = installHook({ cwd: dir, events: ["Stop", "SubagentStop", "SessionEnd"] });
+    expect(result.changed).toBe(true);
+    const settings = JSON.parse(readFileSync(result.settingsPath, "utf8"));
+    expect(settings.hooks.Stop).toHaveLength(1);
+    expect(settings.hooks.SubagentStop).toHaveLength(1);
+    expect(settings.hooks.SessionEnd).toHaveLength(1);
+  });
+
   it("preserves unrelated existing settings", () => {
     // seed an existing setting then install
     installHook({ cwd: dir });
