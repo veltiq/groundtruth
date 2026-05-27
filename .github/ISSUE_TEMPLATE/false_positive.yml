@@ -1,0 +1,41 @@
+name: False positive / false negative
+description: groundtruth got a verdict wrong (these reports are the most valuable!)
+labels: ["accuracy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Accuracy reports are gold. If you can, turn this into a failing test in
+        `src/verify.test.ts` or `src/extract.test.ts` and send a PR.
+  - type: textarea
+    id: summary
+    attributes:
+      label: The assistant's summary text
+      description: The prose groundtruth read (redact anything sensitive).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: What actually changed
+      description: The files changed / diff / commands run that turn.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type of error
+      options:
+        - False positive (flagged unsupported, but the work was really done)
+        - False negative (claimed work was missing, but not flagged)
+        - Wrong verdict (other)
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What verdict did you expect?
+    validations:
+      required: true
