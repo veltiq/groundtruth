@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Keep generated/example data out of language stats and diffs
+examples/*.jsonl linguist-generated=true

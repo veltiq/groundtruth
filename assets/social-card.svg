@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="groundtruth social preview">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <rect x="64" y="64" width="1152" height="512" rx="20" fill="#010409" stroke="#30363d"/>
+
+  <text x="112" y="190" font-size="76" font-weight="700" fill="#e6edf3">ground<tspan fill="#3fb950">truth</tspan></text>
+  <text x="116" y="244" font-size="28" fill="#8b949e">Verify what your AI says it did — against the actual diff.</text>
+
+  <g font-size="30">
+    <text x="116" y="338"><tspan fill="#3fb950">✓ verified</tspan><tspan fill="#6e7681">     file </tspan><tspan fill="#58a6ff">src/auth.ts</tspan></text>
+    <text x="116" y="394"><tspan fill="#f85149">✕ unsupported</tspan><tspan fill="#6e7681">  symbol </tspan><tspan fill="#58a6ff">`rateLimiter`</tspan></text>
+    <text x="116" y="450"><tspan fill="#d29922">! review</tspan><tspan fill="#6e7681">       action </tspan><tspan fill="#8b949e">&#34;fixed the bug&#34;</tspan></text>
+  </g>
+
+  <text x="116" y="528" font-size="22" fill="#6e7681">Claude Code Stop hook + CLI · npx groundtruth · MIT</text>
+</svg>
