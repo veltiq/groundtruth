@@ -6,10 +6,10 @@ import type { Evidence, ToolUse } from "./types.js";
  *   1. The agent's own tool calls (precise, turn-scoped) — the primary signal.
  *   2. The git working tree (corroborating, catches non-tool edits) — optional.
  */
-export function buildEvidence(toolUses: ToolUse[], cwd?: string): Evidence {
+export function buildEvidence(toolUses: ToolUse[], cwd?: string, base?: string): Evidence {
   const ev = emptyEvidence();
   collectToolEvidence(toolUses, ev);
-  if (cwd) mergeEvidence(ev, collectGitEvidence(cwd));
+  if (cwd) mergeEvidence(ev, collectGitEvidence(cwd, base));
   return ev;
 }
 

@@ -32,6 +32,15 @@ describe("extractClaims", () => {
     expect(kinds("This runs on Node.js now.", "file")).toHaveLength(0);
   });
 
+  it("does NOT treat a leading-slash route as a file", () => {
+    expect(kinds("Added a `/api/users` endpoint.", "file")).toHaveLength(0);
+  });
+
+  it("treats an extensionless relative path as a file claim", () => {
+    const claims = kinds("Updated `src/auth` with the new guard.", "file");
+    expect(claims[0]?.target).toBe("src/auth");
+  });
+
   it("detects test-authoring claims", () => {
     const claims = kinds("I also added tests for the new endpoint.", "test");
     expect(claims).toHaveLength(1);

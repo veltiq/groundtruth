@@ -83,6 +83,13 @@ Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automati
 npx @twarc_net/groundtruth verify
 ```
 
+Prefer plugins? Add the marketplace and install in one step:
+
+```text
+/plugin marketplace add youcefzemmar/groundtruth
+/plugin install groundtruth
+```
+
 ## How it works
 
 ```text
@@ -132,6 +139,45 @@ By default the hook is **non-blocking**: it prints its report and gets out of th
 | **action** | _"fixed the timeout bug"_ | — not machine-checkable; flagged for review |
 
 Full details in [`docs/claim-types.md`](docs/claim-types.md).
+
+## Use in CI (GitHub Action)
+
+Post claim verdicts as a sticky comment on every PR — grading the **PR description against the diff**, so it works on any PR with zero agent setup:
+
+```yaml
+# .github/workflows/groundtruth.yml
+name: groundtruth
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  claim-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with: { fetch-depth: 0 }
+      - uses: youcefzemmar/groundtruth@v0.2.0
+```
+
+Add `with: { strict: true }` to turn it into a merge gate. Full options in [docs/github-action.md](docs/github-action.md).
+
+## Configuration
+
+Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` key in package.json):
+
+```json
+{
+  "strict": false,
+  "ignore": ["CHANGELOG.md", "*.generated.ts"],
+  "ignoreKinds": ["command"],
+  "output": "terminal"
+}
+```
+
+- **`ignore`** — claim targets to skip (substring or `*` glob). Your escape hatch for any false positive.
+- **`ignoreKinds`** — whole claim kinds to skip (`file`, `symbol`, `test`, `dependency`, `command`, `action`).
+- **`strict`** / **`output`** — defaults for blocking and output format.
 
 ## Honest limitations
 
