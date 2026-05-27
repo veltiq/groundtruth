@@ -1,5 +1,5 @@
 {
-  "name": "groundtruth",
+  "name": "@twarc_net/groundtruth",
   "version": "0.1.0",
   "description": "Catch when your AI coding assistant claims work it didn't do. Verifies the end-of-turn summary against the actual diff.",
   "keywords": [

@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/youcefzemmar/groundtruth/actions/workflows/ci.yml"><img src="https://github.com/youcefzemmar/groundtruth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.npmjs.com/package/groundtruth"><img src="https://img.shields.io/npm/v/groundtruth?color=cb3837&logo=npm" alt="npm"></a>
+  <a href="https://www.npmjs.com/package/@twarc_net/groundtruth"><img src="https://img.shields.io/npm/v/@twarc_net/groundtruth?color=cb3837&logo=npm" alt="npm"></a>
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT">
   <img src="https://img.shields.io/badge/node-%E2%89%A520-3fb950.svg" alt="Node >= 20">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg" alt="Zero runtime dependencies">
@@ -48,7 +48,7 @@ It is built on one principle: **the diff doesn't lie.** Natural-language summari
 No install, no config — see it catch a phantom change against a canned transcript:
 
 ```bash
-npx groundtruth verify --transcript examples/phantom-change.jsonl --no-git
+npx @twarc_net/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 ```
 
 ## Install
@@ -57,16 +57,16 @@ Requires Node ≥ 20. No global install needed — the hook runs through `npx`.
 
 ```bash
 # Wire it into Claude Code as a Stop hook for this project (./.claude/settings.json)
-npx groundtruth install
+npx @twarc_net/groundtruth install
 
 # …or for every project (~/.claude/settings.json)
-npx groundtruth install --global
+npx @twarc_net/groundtruth install --global
 ```
 
-Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g groundtruth` first and `install` auto-detects it. To check the current session without installing anything:
+Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g @twarc_net/groundtruth` first (it installs the `groundtruth` command) and `install` auto-detects it. To check the current session without installing anything:
 
 ```bash
-npx groundtruth verify
+npx @twarc_net/groundtruth verify
 ```
 
 ## How it works
@@ -128,7 +128,7 @@ Full details in [`docs/claim-types.md`](docs/claim-types.md).
 ## Use as a library
 
 ```ts
-import { runPipeline, renderMarkdown } from "groundtruth";
+import { runPipeline, renderMarkdown } from "@twarc_net/groundtruth";
 
 const report = runPipeline({ transcriptPath: "session.jsonl", cwd: process.cwd() });
 console.log(renderMarkdown(report));
