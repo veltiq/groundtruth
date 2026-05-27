@@ -351,7 +351,7 @@ ${c.bold("Commands")}
   ${c.cyan("help")}       Show this help
 
 ${c.bold("verify options")}
-  --agent <name>        claude (default), codex, gemini, cursor, or auto
+  --agent <name>        claude (default), codex, gemini, cursor, opencode, aider, auto
   --transcript <path>   Check a specific transcript file
   --summary <file>      Grade arbitrary summary text (e.g. a PR description)
   --base <ref>          Diff against a base ref (PR mode: base...HEAD)
