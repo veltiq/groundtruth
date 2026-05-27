@@ -17,11 +17,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   package.json (`strict`, `ignore`, `ignoreKinds`, `output`).
 - **Claude Code plugin** manifest (`.claude-plugin/plugin.json` + `hooks/`) for
   one-command marketplace install.
+- **`stats` + `statusline`** commands backed by a privacy-safe local ledger
+  (`~/.groundtruth/ledger.jsonl`, counts only — never code or prompts).
+  `install --statusline` wires the status bar without clobbering an existing one.
+- **More hook events**: `install --events Stop,SubagentStop,SessionEnd`;
+  `SessionEnd` prints a per-session digest.
+- **Gate config**: `failOn` (which verdict levels fail strict mode) and `shadow`
+  (record-only, no print/block) for gradual rollout.
+- **Multi-agent adapters**: `verify --agent codex|gemini|cursor|auto` — the claim
+  engine is agent-neutral; adapters normalize each transcript to `{summary, toolUses}`.
 
 ### Changed
 
-- Extraction no longer treats leading-slash routes (e.g. `/api/users`) as file
-  claims, removing a class of false positives.
+- Extraction no longer treats leading-slash routes (e.g. `/api/users`) or JSX
+  tags as file claims; JSX/HTML tags extract the component name as a symbol.
+- "renamed `A` to `B`" expects `A` removed and `B` added.
+- Fenced code blocks in a summary are stripped before extraction.
 - File matching now accepts extensionless references (`src/auth` matches
   `src/auth.ts`).
 

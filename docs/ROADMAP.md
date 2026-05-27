@@ -7,9 +7,12 @@ analysis. Tactics are ordered by impact-for-effort.
 ## Status
 
 - **v0.1.0** — published to npm (`@twarc_net/groundtruth`), Stop hook + CLI.
-- **v0.2.0** — on `main` (unpublished): GitHub Action (PR claim-check + sticky
-  comment), config file, Claude Code plugin manifest, precision fixes,
-  `verify --summary/--base`.
+- **v0.2.0** — GitHub Action (PR claim-check + sticky comment), config file,
+  Claude Code plugin manifest, precision fixes, `verify --summary/--base`,
+  `stats`/`statusline` + local ledger, extra hook events (SubagentStop/SessionEnd),
+  gate config (`failOn`/`shadow`), rename/JSX/code-fence extraction, and
+  multi-agent adapters (Codex, Gemini, Cursor). Most of P1 below is now shipped.
+- **Next** — OpenCode + Aider adapters; the metrics dashboard; pre-commit recipe.
 
 ## Growth playbook (ranked)
 
