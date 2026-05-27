@@ -1,5 +1,32 @@
+import { closeSync, openSync, readFileSync, readSync } from "node:fs";
 import type { ToolUse, Turn } from "../types.js";
+import { parseCursorSqlite } from "./cursor-sqlite.js";
 import { type TurnEvent, assembleTurn, isRecord, parseJsonlLines, str } from "./turn.js";
+
+/**
+ * Reads a Cursor transcript from disk, dispatching on format: the SQLite
+ * `state.vscdb` store (older builds) vs. the newer `agent-transcripts/*.jsonl`.
+ */
+export function parseCursorFile(path: string): Turn {
+  return isSqliteFile(path) ? parseCursorSqlite(path) : parseCursor(readFileSync(path, "utf8"));
+}
+
+/** True for a SQLite database — by extension, or the 16-byte magic header. */
+function isSqliteFile(path: string): boolean {
+  if (/\.(vscdb|sqlite3?|db)$/i.test(path)) return true;
+  try {
+    const fd = openSync(path, "r");
+    try {
+      const buf = Buffer.alloc(16);
+      readSync(fd, buf, 0, 16, 0);
+      return buf.toString("utf8").startsWith("SQLite format 3");
+    } finally {
+      closeSync(fd);
+    }
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Cursor agent transcripts (the newer `agent-transcripts/*.jsonl`, matching the

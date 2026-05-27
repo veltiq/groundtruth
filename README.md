@@ -173,6 +173,20 @@ npx @veltiq/groundtruth verify --summary "$1" --staged
 # add --strict to abort the commit when a claim is unsupported
 ```
 
+Prefer [pre-commit](https://pre-commit.com)? Add this to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/veltiq/groundtruth
+    rev: v0.5.0
+    hooks:
+      - id: groundtruth
+        verbose: true          # show the report even when nothing fails
+        # args: ["--strict"]   # and abort the commit on an unsupported claim
+```
+
+Then `pre-commit install --hook-type commit-msg`.
+
 ## Configuration
 
 Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` key in package.json):
@@ -209,13 +223,15 @@ The Stop hook is Claude Code-specific, but `verify` reads other agents' transcri
 ```bash
 groundtruth verify --agent codex     # OpenAI Codex CLI
 groundtruth verify --agent gemini    # Gemini CLI
-groundtruth verify --agent cursor    # Cursor (agent-transcripts)
+groundtruth verify --agent cursor    # Cursor (agent-transcripts, or state.vscdb on older builds)
 groundtruth verify --agent opencode  # OpenCode
 groundtruth verify --agent aider     # Aider (best-effort)
 groundtruth verify --agent auto      # pick the most recent across all
 ```
 
 Each adapter normalizes the agent's transcript into the same `{summary, toolUses}` shape. New adapters are a great contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+> Older Cursor builds keep sessions in a SQLite store (`globalStorage/state.vscdb`) instead of JSONL. groundtruth reads it automatically via `node:sqlite` (Node 24+, or Node 22 with `--experimental-sqlite`); on older Node it falls back to the JSONL transcripts.
 
 ## Stats & status bar
 

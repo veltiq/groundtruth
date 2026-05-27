@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0]
+
+### Added
+
+- **`verify --sarif`** — emit SARIF 2.1.0 so unsupported claims surface in a
+  repo's Security tab via `github/codeql-action/upload-sarif`. Only phantom
+  changes become results, anchored to the claimed file when one is named. (#15)
+- **`stats --json`** — print the 7d/30d/all-time tallies as
+  `{ scope, project, generatedAt, week, month, allTime }` for dashboards. (#17)
+- **pre-commit support** — a `.pre-commit-hooks.yaml` defining a `groundtruth`
+  hook (`commit-msg` stage) that grades the commit message against the staged
+  diff; add it via [pre-commit](https://pre-commit.com). (#16)
+- **Cursor SQLite adapter** — read older Cursor builds' `state.vscdb` store, not
+  just `agent-transcripts/*.jsonl`. Uses `node:sqlite` (Node 24+, or Node 22 with
+  `--experimental-sqlite`) and falls back to JSONL elsewhere. (#14)
+
+### Changed
+
+- `prepublishOnly` → `prepare` so the package builds when installed from git
+  (how pre-commit consumes it); publishing and registry installs are unchanged.
+
 ## [0.4.0]
 
 ### Changed
