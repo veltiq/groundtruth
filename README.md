@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hero.svg" alt="groundtruth — catch when your AI coding assistant claims work it didn't do" width="820">
+  <img src="assets/demo.svg" alt="groundtruth — catch when your AI coding assistant claims work it didn't do" width="820">
 </p>
 
 <p align="center">
