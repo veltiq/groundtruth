@@ -20,9 +20,11 @@ export {
   AGENT_NAMES,
   autoDetect,
   getAdapter,
+  parseAider,
   parseCodex,
   parseCursor,
   parseGemini,
+  parseOpenCode,
 } from "./adapters/index.js";
 export { ledgerPath, recordRun, readLedger, summarize } from "./ledger.js";
 export type { LedgerEntry, LedgerSummary } from "./ledger.js";
