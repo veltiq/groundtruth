@@ -4,7 +4,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { c } from "./colors.js";
 import { loadConfig } from "./config.js";
-import { detectGlobalBinary, hookCommand, installHook, settingsPathFor } from "./install.js";
+import {
+  detectGlobalBinary,
+  hookCommand,
+  installHook,
+  installStatusline,
+  settingsPathFor,
+} from "./install.js";
+import { readLedger, recordRun, summarize } from "./ledger.js";
 import { findLatestTranscript } from "./locate.js";
 import { runPipeline } from "./pipeline.js";
 import { renderJson, renderMarkdown, renderTerminal } from "./report.js";
@@ -31,6 +38,10 @@ async function main(argv: string[]): Promise<number> {
       return runVerify(rest);
     case "install":
       return runInstall(rest);
+    case "statusline":
+      return runStatusline();
+    case "stats":
+      return runStats(rest);
     default:
       process.stderr.write(c.red(`Unknown command: ${cmd}\n\n`));
       printHelp();
@@ -40,7 +51,12 @@ async function main(argv: string[]): Promise<number> {
 
 /** `groundtruth hook` — invoked by the Claude Code Stop hook (reads JSON on stdin). */
 async function runHook(args: string[]): Promise<number> {
-  let payload: { transcript_path?: string; cwd?: string; stop_hook_active?: boolean } = {};
+  let payload: {
+    transcript_path?: string;
+    cwd?: string;
+    stop_hook_active?: boolean;
+    session_id?: string;
+  } = {};
   try {
     payload = JSON.parse(await readStdin()) as typeof payload;
   } catch {
@@ -55,6 +71,7 @@ async function runHook(args: string[]): Promise<number> {
     args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1" || config.strict === true;
 
   const report = runPipeline({ transcriptPath, cwd, config });
+  recordRun(report, cwd, payload.session_id);
   if (report.verdicts.length > 0) {
     process.stderr.write(`\n${renderTerminal(report)}`);
   }
@@ -150,8 +167,74 @@ function runInstall(args: string[]): number {
   }
   process.stdout.write(`${c.green("✓")} Installed groundtruth Stop hook\n`);
   process.stdout.write(c.dim(`  settings: ${result.settingsPath}\n`));
-  process.stdout.write(c.dim(`  command:  ${result.command}\n\n`));
-  process.stdout.write(`Restart Claude Code (or run ${c.cyan("/hooks")}) to pick it up.\n`);
+  process.stdout.write(c.dim(`  command:  ${result.command}\n`));
+
+  if (flags.has("statusline")) {
+    const sl = installStatusline(opts);
+    if (sl.changed) {
+      process.stdout.write(`${c.green("✓")} Wired the status-bar line\n`);
+    } else if (sl.existing) {
+      process.stdout.write(
+        c.yellow(
+          `! You already have a statusLine (${sl.existing}). Add this command yourself to combine: ${sl.command}\n`,
+        ),
+      );
+    } else {
+      process.stdout.write(c.dim("  status-bar line already present\n"));
+    }
+  }
+
+  process.stdout.write(`\nRestart Claude Code (or run ${c.cyan("/hooks")}) to pick it up.\n`);
+  return 0;
+}
+
+/** `groundtruth statusline` — compact one-liner for the Claude Code status bar. */
+async function runStatusline(): Promise<number> {
+  let cwd = process.cwd();
+  try {
+    const payload = JSON.parse(await readStdin()) as { cwd?: string };
+    if (typeof payload.cwd === "string" && payload.cwd) cwd = payload.cwd;
+  } catch {
+    // no payload — fall back to process.cwd()
+  }
+  const week = summarize(readLedger(), { cwd, sinceDays: 7 });
+  const status = week.unsupported > 0 ? `🔎 gt ${week.unsupported}❌ ·7d` : "🔎 gt ✓ ·7d";
+  process.stdout.write(status);
+  return 0;
+}
+
+/** `groundtruth stats` — verdict tallies from the local ledger. */
+function runStats(args: string[]): number {
+  const { flags, values } = parseFlags(args, ["cwd"]);
+  const entries = readLedger();
+  if (entries.length === 0) {
+    process.stdout.write(
+      c.dim("No runs recorded yet. groundtruth tallies each turn once installed.\n"),
+    );
+    return 0;
+  }
+  const scopeAll = flags.has("all");
+  const cwd = scopeAll ? undefined : (values.cwd ?? process.cwd());
+
+  const week = summarize(entries, { cwd, sinceDays: 7 });
+  const month = summarize(entries, { cwd, sinceDays: 30 });
+  const allTime = summarize(entries, { cwd });
+
+  const scopeLabel = scopeAll ? "all projects" : (cwd ?? process.cwd());
+  process.stdout.write(`${c.bold("groundtruth stats")} ${c.dim(`— ${scopeLabel}`)}\n\n`);
+  const row = (label: string, s: ReturnType<typeof summarize>) => {
+    const parts = [
+      `${s.runs} turn${s.runs === 1 ? "" : "s"}`,
+      c.green(`${s.verified} verified`),
+      c.red(`${s.unsupported} unsupported`),
+      c.yellow(`${s.unverifiable} to review`),
+    ];
+    process.stdout.write(`  ${label.padEnd(9)} ${parts.join(c.dim(" · "))}\n`);
+  };
+  row("last 7d", week);
+  row("last 30d", month);
+  row("all time", allTime);
+  process.stdout.write("\n");
   return 0;
 }
 
@@ -212,6 +295,8 @@ ${c.bold("Usage")}
 ${c.bold("Commands")}
   ${c.cyan("verify")}     Check the latest Claude Code turn's claims against the diff
   ${c.cyan("install")}    Wire groundtruth into Claude Code as a Stop hook
+  ${c.cyan("stats")}      Show verdict tallies from the local ledger
+  ${c.cyan("statusline")} Compact status for the Claude Code status bar (reads JSON on stdin)
   ${c.cyan("hook")}       Internal: run as a Stop hook (reads hook JSON on stdin)
   ${c.cyan("version")}    Print the version
   ${c.cyan("help")}       Show this help
@@ -230,7 +315,11 @@ ${c.bold("install options")}
   --bin                 Invoke the global "groundtruth" binary (auto-detected)
   --npx                 Force the "npx -y groundtruth" form
   --strict              Make the hook block on unsupported claims
+  --statusline          Also wire the status-bar line (if none is set)
   --print               Print the settings snippet instead of writing it
+
+${c.bold("stats options")}
+  --all                 Aggregate across all projects (default: current project)
 
 ${c.bold("Examples")}
   npx groundtruth verify
