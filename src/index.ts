@@ -14,5 +14,15 @@ export { verifyClaims } from "./verify.js";
 export { buildReport, renderTerminal, renderJson, renderMarkdown } from "./report.js";
 export { runPipeline } from "./pipeline.js";
 export type { PipelineInput } from "./pipeline.js";
+export {
+  type Adapter,
+  ADAPTERS,
+  AGENT_NAMES,
+  autoDetect,
+  getAdapter,
+  parseCodex,
+  parseCursor,
+  parseGemini,
+} from "./adapters/index.js";
 export { ledgerPath, recordRun, readLedger, summarize } from "./ledger.js";
 export type { LedgerEntry, LedgerSummary } from "./ledger.js";

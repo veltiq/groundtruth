@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { AGENT_NAMES, autoDetect, getAdapter } from "./adapters/index.js";
 import { c } from "./colors.js";
 import { failingCount, loadConfig } from "./config.js";
 import {
@@ -14,9 +15,9 @@ import {
   settingsPathFor,
 } from "./install.js";
 import { readLedger, recordRun, summarize } from "./ledger.js";
-import { findLatestTranscript } from "./locate.js";
 import { runPipeline } from "./pipeline.js";
 import { renderJson, renderMarkdown, renderTerminal } from "./report.js";
+import type { Turn } from "./types.js";
 
 const VERSION = readVersion();
 
@@ -112,39 +113,49 @@ async function runHook(args: string[]): Promise<number> {
 
 /** `groundtruth verify` — run manually against the latest (or a given) transcript. */
 function runVerify(args: string[]): number {
-  const { flags, values } = parseFlags(args, ["transcript", "cwd", "summary", "base"]);
+  const { flags, values } = parseFlags(args, ["transcript", "cwd", "summary", "base", "agent"]);
   const cwd = values.cwd ?? process.cwd();
   const config = loadConfig(cwd);
   const useGit = !flags.has("no-git");
   const gitCwd = useGit ? cwd : undefined;
 
-  let report: ReturnType<typeof runPipeline>;
+  let turn: Turn;
   if (values.summary !== undefined) {
     // PR / description mode: grade arbitrary summary text against the diff.
-    const summary = readFileSync(values.summary, "utf8");
-    report = runPipeline({
-      turn: { summary, toolUses: [] },
-      cwd: gitCwd,
-      base: values.base,
-      config,
-    });
-  } else {
-    let transcriptPath = values.transcript;
-    if (!transcriptPath) {
-      const found = findLatestTranscript(cwd);
-      if (!found) {
-        process.stderr.write(
-          c.red("No transcript found.\n") +
-            c.dim(
-              `Looked for the most recent Claude Code session for ${cwd}.\nPass one explicitly: groundtruth verify --transcript <path.jsonl>\n`,
-            ),
-        );
-        return 1;
-      }
-      transcriptPath = found;
+    turn = { summary: readFileSync(values.summary, "utf8"), toolUses: [] };
+  } else if (values.agent === "auto" && !values.transcript) {
+    const detected = autoDetect(cwd);
+    if (!detected) {
+      process.stderr.write(
+        c.red("No transcript found.\n") +
+          c.dim(`No session found for ${cwd} across: ${AGENT_NAMES.join(", ")}.\n`),
+      );
+      return 1;
     }
-    report = runPipeline({ transcriptPath, cwd: gitCwd, base: values.base, config });
+    turn = detected.adapter.parse(detected.path);
+  } else {
+    const name = values.agent && values.agent !== "auto" ? values.agent : "claude";
+    const adapter = getAdapter(name);
+    if (!adapter) {
+      process.stderr.write(
+        c.red(`Unknown agent: ${name}.`) + c.dim(` Known: ${AGENT_NAMES.join(", ")}, auto\n`),
+      );
+      return 1;
+    }
+    const path = values.transcript ?? adapter.locate(cwd);
+    if (!path) {
+      process.stderr.write(
+        c.red("No transcript found.\n") +
+          c.dim(
+            `No ${name} session found for ${cwd}. Pass --transcript <path>, or try --agent auto.\n`,
+          ),
+      );
+      return 1;
+    }
+    turn = adapter.parse(path);
   }
+
+  const report = runPipeline({ turn, cwd: gitCwd, base: values.base, config });
 
   const format = flags.has("json")
     ? "json"
@@ -340,7 +351,8 @@ ${c.bold("Commands")}
   ${c.cyan("help")}       Show this help
 
 ${c.bold("verify options")}
-  --transcript <path>   Check a specific .jsonl transcript
+  --agent <name>        claude (default), codex, gemini, cursor, or auto
+  --transcript <path>   Check a specific transcript file
   --summary <file>      Grade arbitrary summary text (e.g. a PR description)
   --base <ref>          Diff against a base ref (PR mode: base...HEAD)
   --cwd <path>          Working dir for git evidence (default: cwd)
