@@ -35,9 +35,10 @@ interface Settings {
 }
 
 export function hookCommand(opts: InstallOptions): string {
-  // Default to the npx form: it works whether or not groundtruth is installed
-  // globally, so `npx groundtruth install` produces a hook that just runs.
-  const base = opts.bin ? "groundtruth hook" : "npx -y groundtruth hook";
+  // Default to the npx form: it works whether or not the package is installed
+  // globally, so `npx @twarc_net/groundtruth install` produces a hook that runs.
+  // The global binary is named `groundtruth` regardless of the package scope.
+  const base = opts.bin ? "groundtruth hook" : "npx -y @twarc_net/groundtruth hook";
   return opts.strict ? `${base} --strict` : base;
 }
 
