@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { c } from "./colors.js";
-import { loadConfig } from "./config.js";
+import { failingCount, loadConfig } from "./config.js";
 import {
+  type HookEvent,
+  KNOWN_EVENTS,
   detectGlobalBinary,
   hookCommand,
   installHook,
@@ -56,6 +58,7 @@ async function runHook(args: string[]): Promise<number> {
     cwd?: string;
     stop_hook_active?: boolean;
     session_id?: string;
+    hook_event_name?: string;
   } = {};
   try {
     payload = JSON.parse(await readStdin()) as typeof payload;
@@ -63,26 +66,44 @@ async function runHook(args: string[]): Promise<number> {
     return 0; // no/invalid payload: nothing to check, stay silent
   }
 
-  const transcriptPath = payload.transcript_path;
-  if (!transcriptPath) return 0;
   const cwd = payload.cwd ?? process.cwd();
   const config = loadConfig(cwd);
+
+  // SessionEnd: print a per-session digest from the ledger instead of a check.
+  if (payload.hook_event_name === "SessionEnd") {
+    if (!config.shadow && payload.session_id) {
+      const s = summarize(readLedger(), { session: payload.session_id });
+      if (s.runs > 0) {
+        process.stderr.write(
+          `\n${c.bold("groundtruth")}${c.dim(" — session digest")}  ` +
+            `${s.runs} turns · ${c.green(`${s.verified} verified`)} · ${c.red(`${s.unsupported} unsupported`)} · ${c.yellow(`${s.unverifiable} to review`)}\n`,
+        );
+      }
+    }
+    return 0;
+  }
+
+  const transcriptPath = payload.transcript_path;
+  if (!transcriptPath) return 0;
+
   const strict =
     args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1" || config.strict === true;
 
   const report = runPipeline({ transcriptPath, cwd, config });
   recordRun(report, cwd, payload.session_id);
+
+  if (config.shadow) return 0; // record only — never print or block
+
   if (report.verdicts.length > 0) {
     process.stderr.write(`\n${renderTerminal(report)}`);
   }
 
   // Never block twice in a row — avoids a strict-mode loop if the agent can't
   // satisfy the check.
-  if (strict && !payload.stop_hook_active && report.summary.unsupported > 0) {
+  const fails = failingCount(report, config);
+  if (strict && !payload.stop_hook_active && fails > 0) {
     process.stderr.write(
-      c.red(
-        `groundtruth: ${report.summary.unsupported} unsupported claim(s) — verify before continuing.\n`,
-      ),
+      c.red(`groundtruth: ${fails} failing claim(s) — verify before continuing.\n`),
     );
     return 2; // blocks Stop and feeds the reason back to the agent
   }
@@ -135,28 +156,45 @@ function runVerify(args: string[]): number {
   else process.stdout.write(renderTerminal(report));
 
   const strict = flags.has("strict") || config.strict === true;
-  return strict && report.summary.unsupported > 0 ? 2 : 0;
+  return strict && failingCount(report, config) > 0 ? 2 : 0;
 }
 
 /** `groundtruth install` — wire the Stop hook into Claude Code settings. */
 function runInstall(args: string[]): number {
-  const { flags, values } = parseFlags(args, ["cwd"]);
+  const { flags, values } = parseFlags(args, ["cwd", "events"]);
   // Prefer the global binary if one is on PATH (faster per turn); otherwise use
   // npx (always works). Explicit --bin / --npx override the detection.
   const useBin = flags.has("bin") || (!flags.has("npx") && detectGlobalBinary());
+
+  let events: HookEvent[] | undefined;
+  if (values.events) {
+    const requested = values.events.split(",").map((e) => e.trim());
+    const invalid = requested.filter((e) => !(KNOWN_EVENTS as readonly string[]).includes(e));
+    if (invalid.length > 0) {
+      process.stderr.write(
+        c.red(`Unknown hook event(s): ${invalid.join(", ")}. Known: ${KNOWN_EVENTS.join(", ")}\n`),
+      );
+      return 1;
+    }
+    events = requested as HookEvent[];
+  }
+
   const opts = {
     global: flags.has("global"),
     bin: useBin,
     strict: flags.has("strict"),
+    events,
     cwd: values.cwd,
   };
 
+  const eventList = events && events.length > 0 ? events : (["Stop"] as HookEvent[]);
+
   if (flags.has("print")) {
     const command = hookCommand(opts);
+    const entry = [{ hooks: [{ type: "command", command }] }];
+    const hooks = Object.fromEntries(eventList.map((e) => [e, entry]));
     process.stdout.write(`Add this to ${settingsPathFor(opts)}:\n\n`);
-    process.stdout.write(
-      `${JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: "command", command }] }] } }, null, 2)}\n`,
-    );
+    process.stdout.write(`${JSON.stringify({ hooks }, null, 2)}\n`);
     return 0;
   }
 
@@ -165,7 +203,7 @@ function runInstall(args: string[]): number {
     process.stdout.write(c.dim(`groundtruth hook already present in ${result.settingsPath}\n`));
     return 0;
   }
-  process.stdout.write(`${c.green("✓")} Installed groundtruth Stop hook\n`);
+  process.stdout.write(`${c.green("✓")} Installed groundtruth hook (${eventList.join(", ")})\n`);
   process.stdout.write(c.dim(`  settings: ${result.settingsPath}\n`));
   process.stdout.write(c.dim(`  command:  ${result.command}\n`));
 
@@ -314,7 +352,8 @@ ${c.bold("install options")}
   --global              Install into ~/.claude/settings.json (default: ./.claude)
   --bin                 Invoke the global "groundtruth" binary (auto-detected)
   --npx                 Force the "npx -y groundtruth" form
-  --strict              Make the hook block on unsupported claims
+  --strict              Make the hook block on failing claims
+  --events <list>       Hook events to install (default: Stop). e.g. Stop,SubagentStop,SessionEnd
   --statusline          Also wire the status-bar line (if none is set)
   --print               Print the settings snippet instead of writing it
 

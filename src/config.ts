@@ -1,8 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Claim, ClaimKind, Config } from "./types.js";
+import type { Claim, ClaimKind, Config, FailLevel, Report } from "./types.js";
 
 const RC_FILE = ".groundtruthrc.json";
+const VALID_FAIL_LEVELS: ReadonlySet<string> = new Set(["unsupported", "unverifiable"]);
 const VALID_KINDS: ReadonlySet<string> = new Set([
   "file",
   "symbol",
@@ -45,10 +46,23 @@ function toMatcher(pattern: string): (value: string) => boolean {
   return (value) => value.toLowerCase().includes(p);
 }
 
+/** How many verdicts count as a failure under the config's `failOn` policy. */
+export function failingCount(report: Report, config: Config): number {
+  const levels: FailLevel[] = config.failOn ?? ["unsupported"];
+  let n = 0;
+  if (levels.includes("unsupported")) n += report.summary.unsupported;
+  if (levels.includes("unverifiable")) n += report.summary.unverifiable;
+  return n;
+}
+
 function sanitize(input: unknown): Config {
   if (!isRecord(input)) return {};
   const out: Config = {};
   if (typeof input.strict === "boolean") out.strict = input.strict;
+  if (typeof input.shadow === "boolean") out.shadow = input.shadow;
+  if (isStringArray(input.failOn)) {
+    out.failOn = input.failOn.filter((l): l is FailLevel => VALID_FAIL_LEVELS.has(l));
+  }
   if (isStringArray(input.ignore)) out.ignore = input.ignore;
   if (isStringArray(input.ignoreKinds)) {
     out.ignoreKinds = input.ignoreKinds.filter((k): k is ClaimKind => VALID_KINDS.has(k));
