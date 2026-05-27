@@ -169,6 +169,8 @@ Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` 
 ```json
 {
   "strict": false,
+  "failOn": ["unsupported"],
+  "shadow": false,
   "ignore": ["CHANGELOG.md", "*.generated.ts"],
   "ignoreKinds": ["command"],
   "output": "terminal"
@@ -178,6 +180,16 @@ Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` 
 - **`ignore`** — claim targets to skip (substring or `*` glob). Your escape hatch for any false positive.
 - **`ignoreKinds`** — whole claim kinds to skip (`file`, `symbol`, `test`, `dependency`, `command`, `action`).
 - **`strict`** / **`output`** — defaults for blocking and output format.
+- **`failOn`** — which verdict levels count as a failure in strict mode (default `["unsupported"]`).
+- **`shadow`** — record to the ledger but never print or block (for gradual rollout).
+
+Install into more hook events for multi-agent workflows:
+
+```bash
+npx @twarc_net/groundtruth install --events Stop,SubagentStop,SessionEnd
+```
+
+`SubagentStop` checks each subagent's turn; `SessionEnd` prints a per-session digest.
 
 ## Stats & status bar
 
