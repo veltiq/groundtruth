@@ -191,6 +191,19 @@ npx @twarc_net/groundtruth install --events Stop,SubagentStop,SessionEnd
 
 `SubagentStop` checks each subagent's turn; `SessionEnd` prints a per-session digest.
 
+## Other agents
+
+The Stop hook is Claude Code-specific, but `verify` reads other agents' transcripts too — the claim engine is agent-neutral:
+
+```bash
+groundtruth verify --agent codex     # OpenAI Codex CLI
+groundtruth verify --agent gemini    # Gemini CLI
+groundtruth verify --agent cursor    # Cursor (agent-transcripts)
+groundtruth verify --agent auto      # pick the most recent across all
+```
+
+Each adapter normalizes the agent's transcript into the same `{summary, toolUses}` shape. New adapters are a great contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Stats & status bar
 
 The hook keeps a privacy-safe local tally (counts only — never code or prompts, in `~/.groundtruth/ledger.jsonl`):
