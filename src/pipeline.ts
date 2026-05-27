@@ -15,6 +15,8 @@ export interface PipelineInput {
   cwd?: string;
   /** Base ref to diff against (PR mode: `base...HEAD`). Defaults to the working tree. */
   base?: string;
+  /** Use the staged index as evidence (commit-msg checks). */
+  staged?: boolean;
   /** Config (ignore rules etc.). If omitted, loaded from `cwd` when present. */
   config?: Config;
 }
@@ -31,7 +33,10 @@ export function runPipeline(input: PipelineInput): Report {
       : { summary: "", toolUses: [] });
 
   const config = input.config ?? (input.cwd ? loadConfig(input.cwd) : {});
-  const evidence = buildEvidence(turn.toolUses, input.cwd, input.base);
+  const evidence = buildEvidence(turn.toolUses, input.cwd, {
+    base: input.base,
+    staged: input.staged,
+  });
   const claims = applyConfig(extractClaims(turn.summary), config);
   const verdicts = verifyClaims(claims, evidence);
   return buildReport(verdicts);

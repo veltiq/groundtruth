@@ -155,7 +155,13 @@ function runVerify(args: string[]): number {
     turn = adapter.parse(path);
   }
 
-  const report = runPipeline({ turn, cwd: gitCwd, base: values.base, config });
+  const report = runPipeline({
+    turn,
+    cwd: gitCwd,
+    base: values.base,
+    staged: flags.has("staged"),
+    config,
+  });
 
   const format = flags.has("json")
     ? "json"
@@ -355,6 +361,7 @@ ${c.bold("verify options")}
   --transcript <path>   Check a specific transcript file
   --summary <file>      Grade arbitrary summary text (e.g. a PR description)
   --base <ref>          Diff against a base ref (PR mode: base...HEAD)
+  --staged              Use staged changes as evidence (commit-msg checks)
   --cwd <path>          Working dir for git evidence (default: cwd)
   --no-git              Use only the transcript's tool calls as evidence
   --json | --markdown   Output format (default: pretty terminal)

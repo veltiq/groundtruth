@@ -10,12 +10,28 @@ import type { Evidence } from "./types.js";
  * If `cwd` is not a git repository (or git is unavailable) this returns empty
  * evidence rather than throwing — the pipeline degrades gracefully.
  */
-export function collectGitEvidence(cwd: string, base?: string): Evidence {
+export interface GitOptions {
+  /** Diff against a base ref (PR/branch mode: `base...HEAD`). */
+  base?: string;
+  /** Use the staged index (`git diff --cached`) — for commit-msg checks. */
+  staged?: boolean;
+}
+
+export function collectGitEvidence(cwd: string, opts: GitOptions = {}): Evidence {
   const ev = emptyEvidence();
 
-  if (base) {
+  if (opts.staged) {
+    // Staged mode: what's about to be committed.
+    const diff = git(["diff", "--cached", "--no-color", "--unified=0"], cwd);
+    if (diff !== null) parseDiff(diff, ev);
+    const names = git(["diff", "--cached", "--name-status"], cwd);
+    if (names !== null) parseNameStatus(names, ev);
+    return ev;
+  }
+
+  if (opts.base) {
     // PR / branch mode: everything that changed since the merge-base with `base`.
-    const range = `${base}...HEAD`;
+    const range = `${opts.base}...HEAD`;
     const diff = git(["diff", range, "--no-color", "--unified=0"], cwd);
     if (diff !== null) parseDiff(diff, ev);
     const names = git(["diff", "--name-status", range], cwd);

@@ -4,11 +4,20 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0]
+
+### Added
+
+- **OpenCode** and **Aider** transcript adapters — `verify --agent opencode|aider`
+  completes the multi-agent set (claude, codex, gemini, cursor, opencode, aider).
+- **`verify --staged`** — use the staged index as evidence, so a git `commit-msg`
+  hook can check a commit message against what's actually staged.
+
 ## [0.2.0]
 
 ### Added
 
-- **GitHub Action** (`youcefzemmar/groundtruth@v0.2.0`) that grades a PR's
+- **GitHub Action** (`youcefzemmar/groundtruth@v0.3.0`) that grades a PR's
   description against its diff and posts a sticky PR comment; optional `strict`
   merge gate. See [docs/github-action.md](docs/github-action.md).
 - **PR / summary mode**: `verify --summary <file> --base <ref>` grades arbitrary
