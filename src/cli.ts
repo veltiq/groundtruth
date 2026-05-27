@@ -14,7 +14,7 @@ import {
   installStatusline,
   settingsPathFor,
 } from "./install.js";
-import { readLedger, recordRun, summarize } from "./ledger.js";
+import { type LedgerSummary, buildStats, readLedger, recordRun, summarize } from "./ledger.js";
 import { runPipeline } from "./pipeline.js";
 import { renderJson, renderMarkdown, renderTerminal } from "./report.js";
 import type { Turn } from "./types.js";
@@ -271,13 +271,17 @@ function runStats(args: string[]): number {
   const scopeAll = flags.has("all");
   const cwd = scopeAll ? undefined : (values.cwd ?? process.cwd());
 
-  const week = summarize(entries, { cwd, sinceDays: 7 });
-  const month = summarize(entries, { cwd, sinceDays: 30 });
-  const allTime = summarize(entries, { cwd });
+  const stats = buildStats(entries, { cwd, all: scopeAll });
 
+  if (flags.has("json")) {
+    process.stdout.write(`${JSON.stringify(stats, null, 2)}\n`);
+    return 0;
+  }
+
+  const { week, month, allTime } = stats;
   const scopeLabel = scopeAll ? "all projects" : (cwd ?? process.cwd());
   process.stdout.write(`${c.bold("groundtruth stats")} ${c.dim(`— ${scopeLabel}`)}\n\n`);
-  const row = (label: string, s: ReturnType<typeof summarize>) => {
+  const row = (label: string, s: LedgerSummary) => {
     const parts = [
       `${s.runs} turn${s.runs === 1 ? "" : "s"}`,
       c.green(`${s.verified} verified`),
@@ -378,6 +382,7 @@ ${c.bold("install options")}
 
 ${c.bold("stats options")}
   --all                 Aggregate across all projects (default: current project)
+  --json                Print the 7d/30d/all-time tallies as JSON (for dashboards)
 
 ${c.bold("Examples")}
   npx groundtruth verify
