@@ -41,10 +41,18 @@ describe("collectGitEvidence", () => {
     git(["add", "-A"], dir);
     git(["commit", "-q", "-m", "feature"], dir);
 
-    const ev = collectGitEvidence(dir, base);
+    const ev = collectGitEvidence(dir, { base });
     expect(ev.touchedFiles).toContain("b.ts");
     expect(ev.createdFiles).toContain("b.ts");
     expect(ev.addedText).toContain("brandNew");
+  });
+
+  it("captures staged changes (commit-msg mode)", () => {
+    writeFileSync(join(dir, "c.ts"), "export function stagedFn() {}\n");
+    git(["add", "c.ts"], dir);
+    const ev = collectGitEvidence(dir, { staged: true });
+    expect(ev.touchedFiles).toContain("c.ts");
+    expect(ev.addedText).toContain("stagedFn");
   });
 
   it("returns empty evidence outside a git repository", () => {
