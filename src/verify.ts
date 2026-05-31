@@ -62,6 +62,16 @@ function verifySymbol(claim: Claim, ev: Evidence): Verdict {
       `\`${id}\` appears only in removed code — the wording implied an addition.`,
     );
   }
+  // A "modify" claim ("updated/refactored `foo`") doesn't assert the identifier
+  // was added — you can change a symbol's body without its name appearing in the
+  // changed lines. So when something *did* change but the name isn't in the diff,
+  // stay advisory rather than falsely accusing.
+  if (claim.polarity === "modify" && (ev.addedText.trim() || ev.removedText.trim())) {
+    return advisory(
+      claim,
+      `\`${id}\` isn't in the changed lines, but a modification needn't surface its name — review manually.`,
+    );
+  }
   if (!ev.addedText.trim() && !ev.removedText.trim()) {
     return bad(claim, `Claimed \`${id}\`, but no code changes were captured this turn.`);
   }
@@ -73,9 +83,15 @@ function verifyTest(claim: Claim, ev: Evidence): Verdict {
   if (file) return ok(claim, `Test file \`${file}\` was changed.`, file);
   const cmd = ev.commands.find(isTestCommand);
   if (cmd) return ok(claim, `A test command ran: \`${trunc(cmd)}\`.`);
+  // Tests don't always live in a conventionally-named file. If the added code
+  // carries test-runner idioms (describe/it/expect/assert/…), that corroborates
+  // the claim just as well as the filename would.
+  if (hasTestIdiom(ev.addedText)) {
+    return ok(claim, "Test-style assertions appear in the added code.");
+  }
   return bad(
     claim,
-    "Claimed test work, but no test file changed and no test command ran this turn.",
+    "Claimed test work, but no test file changed, no test command ran, and the added code has no test assertions.",
   );
 }
 
@@ -148,6 +164,20 @@ function isTestFile(f: string): boolean {
     /\.(test|spec)\.[a-z0-9]+$/.test(b) ||
     /_test\.[a-z0-9]+$/.test(b) ||
     /(^|\/)test_[^/]+\.py$/.test(b)
+  );
+}
+
+/**
+ * Test-runner idioms that strongly imply test code, used to corroborate an
+ * "added tests" claim when the file isn't conventionally named. Deliberately
+ * excludes a bare `test(` (collides with `regex.test(...)`); `describe`/`it`/
+ * `expect`/`assert` are far more test-specific.
+ */
+function hasTestIdiom(text: string): boolean {
+  if (!text) return false;
+  return (
+    /\b(describe|it|expect|beforeEach|afterEach|beforeAll|afterAll|assert)\s*\(/.test(text) ||
+    /@Test\b|#\[test\]|\bfunc\s+Test[A-Z]/.test(text)
   );
 }
 

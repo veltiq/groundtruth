@@ -27,6 +27,7 @@ export function extractClaims(summary: string): Claim[] {
     const polarity = detectPolarity(clause);
     const hasVerb =
       ADD_VERBS.test(clause) || REMOVE_VERBS.test(clause) || MODIFY_VERBS.test(clause);
+    const dep = dependencyTarget(clause);
     let concrete = false;
 
     // "renamed `A` to `B`" — the old name should be gone, the new name present.
@@ -53,6 +54,9 @@ export function extractClaims(summary: string): Claim[] {
       }
       const sym = symbolName(tok);
       if (sym) {
+        // Don't also mine the dependency's own name as a symbol — "installed
+        // `zod`" is a single dependency claim, not a phantom `zod` symbol.
+        if (dep && sym === dep) continue;
         add("symbol", sym, polarity, clause);
         concrete = true;
       }
@@ -76,7 +80,6 @@ export function extractClaims(summary: string): Claim[] {
       concrete = true;
     }
 
-    const dep = dependencyTarget(clause);
     if (dep) {
       add("dependency", dep, "add", clause);
       concrete = true;
