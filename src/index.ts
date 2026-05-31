@@ -12,8 +12,9 @@ export { buildEvidence, emptyEvidence, mergeEvidence } from "./evidence.js";
 export { collectGitEvidence } from "./git.js";
 export { verifyClaims } from "./verify.js";
 export { buildReport, renderTerminal, renderJson, renderMarkdown } from "./report.js";
-export { runPipeline } from "./pipeline.js";
-export type { PipelineInput } from "./pipeline.js";
+export { analyze, runPipeline } from "./pipeline.js";
+export type { PipelineInput, PipelineResult } from "./pipeline.js";
+export { detectWorkKind, summarizeRequest } from "./intent.js";
 export {
   type Adapter,
   ADAPTERS,

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Turn } from "./types.js";
+import type { Turn, WorkContext } from "./types.js";
 
 /**
  * The behavioral verify loop.
@@ -158,6 +158,10 @@ export interface LoopGateInput {
   cwd: string;
   session?: string;
   maxRounds: number;
+  /** The human request that opened the turn (grounds the verification). */
+  request?: string;
+  /** Inferred work shape, used to tailor the protocol (which command, screenshot?). */
+  work?: WorkContext;
 }
 
 export interface LoopGateResult {
@@ -192,38 +196,83 @@ export function runLoopGate(input: LoopGateInput): LoopGateResult {
   writeRounds(key, decision.rounds);
   return {
     block: true,
-    message: buildProtocol(signalFile(key), decision.rounds, input.maxRounds),
+    message: buildProtocol(signalFile(key), decision.rounds, input.maxRounds, {
+      request: input.request,
+      work: input.work,
+    }),
   };
+}
+
+export interface ProtocolContext {
+  /** The human request that opened the turn, grounding the verification. */
+  request?: string;
+  /** Inferred work shape, used to pick the verification steps and commands. */
+  work?: WorkContext;
 }
 
 /**
  * The verification protocol fed back to the agent when the gate blocks. It is
  * deliberately agent-agnostic about *how* to spawn a sub-checker but specific
  * about *what* to verify, and it hands the agent the exact signal-file path.
+ *
+ * When the context is known it grounds the check in the real request and leads
+ * with the verification appropriate to the work — for web that means actually
+ * driving a browser and reading a screenshot, the richest signal there is.
  */
-export function buildProtocol(signalPath: string, round: number, maxRounds: number): string {
+export function buildProtocol(
+  signalPath: string,
+  round: number,
+  maxRounds: number,
+  ctx: ProtocolContext = {},
+): string {
+  const askLine = ctx.request ? `\nThe request you must verify against:\n  "${ctx.request}"\n` : "";
+
   return `🔍 groundtruth verify loop — round ${round}/${maxRounds - 1}. Do not finish yet.
 
 You reported this work as done. Before stopping, PROVE it behaves as requested —
 re-reading the code is not enough; you must execute something and observe it.
-
+${askLine}
 1. No checkable change this turn (a pure answer or question)? Then finish:
      printf skip > ${signalPath}
 
 2. Otherwise spawn a FRESH verification sub-agent (one that did not write the
-   code). Have it verify by the kind of work:
-     • Web / UI  → open the page in the browser (e.g. the Playwright MCP),
-                   screenshot it, READ the screenshot, and compare what is
-                   actually on screen against the request.
-     • CLI       → actually run the command(s); check output and exit code.
-     • API       → start the server, hit the endpoint(s), check status + body.
-     • Library   → run the tests, plus a smoke call of the changed code.
-   It must check against the ORIGINAL request and actively hunt for mistakes
-   (missed requirements, wrong values, broken edge cases), then return a
-   verdict: PASS, or FAIL with a concrete list of issues.
+   code). Have it actually exercise the work and observe the result:
+${verificationSteps(ctx.work)}
+   It must check the result against the request above and actively hunt for
+   mistakes (missed requirements, wrong values, broken edge cases, console
+   errors), then return a verdict: PASS, or FAIL with a concrete list of issues.
 
 3. FAIL → fix every issue and verify again. Do NOT write the signal yet.
    PASS → printf pass > ${signalPath}   then you may stop.
 
 Only write \`pass\` when verification genuinely succeeded. Be honest.`;
+}
+
+/** The verification body, tailored to the inferred work when we know it. */
+function verificationSteps(work?: WorkContext): string {
+  const run = work?.runHint ? `\`${work.runHint}\`` : "the project's run/dev command";
+  const url = work?.urlHint ?? "the local URL it serves";
+  switch (work?.kind) {
+    case "web":
+      return `   • This looks like WEB / UI work. Start it (${run}), open ${url} in a
+     real browser (the Playwright MCP, or a headless Chrome), take a SCREENSHOT,
+     and READ the screenshot — compare what is actually on screen, pixel-for-
+     intent, against the request. Check the console for errors too.`;
+    case "api":
+      return `   • This looks like an API / server. Start it (${run}), then hit the
+     affected endpoint(s) at ${url} (curl / fetch) and check the status code
+     and response body against the request. Cover the error paths, not just 200.`;
+    case "cli":
+      return `   • This looks like a CLI. Actually run the affected command(s) (${run}),
+     with realistic args, and check stdout/stderr and the exit code against the
+     request. Try at least one invalid-input case.`;
+    case "library":
+      return `   • This looks like library code. Run the tests (${run}), and add a smoke
+     call that exercises the changed function with a real input, observing the
+     return value against the request.`;
+    default:
+      return `   • Run / open / call whatever this turn changed and observe the result:
+     Web → screenshot the page; CLI → run it; API → hit the endpoint; library →
+     run the tests plus a smoke call. Use ${run} if it applies.`;
+  }
 }

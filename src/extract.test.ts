@@ -36,6 +36,16 @@ describe("extractClaims", () => {
     expect(kinds("Added a `/api/users` endpoint.", "file")).toHaveLength(0);
   });
 
+  it("does NOT treat prose slash-pairs as files (web/UI, stdout/stderr, client/server)", () => {
+    expect(kinds("This looks like web/UI work, so screenshot it.", "file")).toHaveLength(0);
+    expect(kinds("Checked stdout/stderr and the exit code.", "file")).toHaveLength(0);
+    expect(kinds("A clean client/server split with and/or fallbacks.", "file")).toHaveLength(0);
+  });
+
+  it("still recognizes a bare extension-less path under a known source root", () => {
+    expect(kinds("Refactored src/auth to use the guard.", "file")[0]?.target).toBe("src/auth");
+  });
+
   it("treats an extensionless relative path as a file claim", () => {
     const claims = kinds("Updated `src/auth` with the new guard.", "file");
     expect(claims[0]?.target).toBe("src/auth");
