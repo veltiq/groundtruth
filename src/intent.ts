@@ -25,7 +25,11 @@ export function summarizeRequest(raw: string | undefined, max = 240): string | u
 }
 
 const WEB_EXT = /\.(tsx|jsx|vue|svelte|astro|html|htm|css|scss|sass|less)$/i;
-const WEB_DIR = /(^|\/)(components?|pages?|views?|app|public|client|frontend|ui|styles?)\//i;
+// UI-source directories only. Deliberately excludes ambiguous roots like `app`,
+// `public`, and `client` — those host backend code just as often (Rails/FastAPI
+// `app/`, a `client/` API SDK), so a real web *extension* or DOM *idiom* (below)
+// is what promotes those; the bare directory alone shouldn't.
+const WEB_DIR = /(^|\/)(components?|pages?|views?|frontend|ui|styles?)\//i;
 const WEB_IDIOM =
   /\b(classname=|document\.|window\.|usestate|useeffect|render\s*\(|<\/?[a-z][\w-]*[\s/>]|addeventlistener|queryselector)/i;
 
@@ -55,21 +59,26 @@ export function detectWorkKind(
   const codeFiles = files.filter((f) => !TEST_PATH.test(f));
   const onlyTests = files.length > 0 && codeFiles.length === 0;
 
-  const looksWeb =
-    codeFiles.some((f) => WEB_EXT.test(f) || WEB_DIR.test(f)) || WEB_IDIOM.test(added);
   const looksApi = codeFiles.some((f) => API_FILE.test(f)) && API_IDIOM.test(added);
+  // A real web extension or a DOM idiom is a strong web signal on its own. A mere
+  // UI-ish directory is weak — it only counts when the turn isn't already a
+  // detected API, so backend `app/routes.py` with `@app.get` stays an API.
+  const strongWeb = codeFiles.some((f) => WEB_EXT.test(f)) || WEB_IDIOM.test(added);
+  const looksWeb = strongWeb || (!looksApi && codeFiles.some((f) => WEB_DIR.test(f)));
   const looksCli = CLI_IDIOM.test(added) || codeFiles.some((f) => /(^|\/)(bin|cli)[.\/]/i.test(f));
 
   // Priority: the richest exercise wins. A screenshot beats a curl beats a run.
+  // Web wins only on a strong signal; a weak dir-only match yields to a real API.
   let kind: WorkKind;
-  if (looksWeb) kind = "web";
+  if (strongWeb) kind = "web";
   else if (looksApi) kind = "api";
+  else if (looksWeb) kind = "web";
   else if (looksCli) kind = "cli";
   else if (onlyTests) kind = "library";
   else kind = "generic";
 
   const runHint = pickRunHint(kind, scripts);
-  const urlHint = kind === "web" || kind === "api" ? pickUrlHint(added, scripts) : undefined;
+  const urlHint = kind === "web" || kind === "api" ? pickUrlHint(kind, added, scripts) : undefined;
 
   const ctx: WorkContext = { kind };
   if (runHint) ctx.runHint = runHint;
@@ -93,15 +102,28 @@ function pickRunHint(kind: WorkKind, scripts: Record<string, string>): string | 
   return undefined;
 }
 
-/** Best-effort guess at the local URL to open, from the diff or the dev tool. */
-function pickUrlHint(added: string, scripts: Record<string, string>): string | undefined {
+/**
+ * Best-effort guess at the local URL to open. For an API the port in the diff is
+ * authoritative (it's the server's own `listen`). For a web frontend the dev
+ * tool's default is more reliable than a stray `listen()` in the changed lines,
+ * so the framework default is preferred there and the diff port is the fallback.
+ */
+function pickUrlHint(
+  kind: WorkKind,
+  added: string,
+  scripts: Record<string, string>,
+): string | undefined {
   const port = detectPort(added);
-  if (port) return `http://localhost:${port}`;
+  const fromPort = port ? `http://localhost:${port}` : undefined;
   const all = Object.values(scripts).join(" ").toLowerCase();
-  if (/\bvite\b/.test(all)) return "http://localhost:5173";
-  if (/\bnext\b/.test(all)) return "http://localhost:3000";
-  if (/\b(astro)\b/.test(all)) return "http://localhost:4321";
-  return undefined;
+  const fromTool = /\bvite\b/.test(all)
+    ? "http://localhost:5173"
+    : /\bnext\b/.test(all)
+      ? "http://localhost:3000"
+      : /\bastro\b/.test(all)
+        ? "http://localhost:4321"
+        : undefined;
+  return kind === "web" ? (fromTool ?? fromPort) : (fromPort ?? fromTool);
 }
 
 function detectPort(text: string): string | null {
