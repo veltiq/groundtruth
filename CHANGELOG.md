@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.1]
+
+### Fixed
+
+- **`doctor`: the "Verify loop" check now agrees with the wired hook.** It read
+  only the config, so after `setup` it could say "off" while the Stop-hook line
+  said "verify loop on". It now reports the loop **on** when the installed hook
+  command carries `--loop` (or config enables it). Cosmetic, caught by an
+  independent verification pass.
+
 ## [0.7.0]
 
 ### Added
