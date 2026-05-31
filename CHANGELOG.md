@@ -39,6 +39,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Precision: bare prose slash-pairs are no longer mined as file claims.**
+  Tokens like `web/UI`, `stdout/stderr`, `client/server`, or `and/or` in a
+  summary were being treated as bare file paths and flagged `unsupported`. A
+  bare (un-backticked) slash token now counts as a path only when it carries a
+  real code extension or sits under a known source root (`src/`, `lib/`,
+  `packages/`, …). Caught by groundtruth dogfooding its own PR. Real paths
+  (`src/db/client.ts`, `src/auth`) are unaffected.
 - **Precision: eliminated four classes of false `unsupported` verdicts** on
   honest work, with an end-to-end regression suite (`src/precision.test.ts`):
   - A **modify** claim whose identifier isn't in the changed lines

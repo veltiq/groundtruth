@@ -293,10 +293,45 @@ function stripCall(tok: string): string {
 }
 
 /**
+ * Source-tree roots that make a bare, extension-less slash token read as a real
+ * path rather than prose. Deliberately structural and unambiguous — words like
+ * `client`, `server`, `api`, or `web` are excluded because they appear in plain
+ * prose slash-pairs ("client/server", "web/UI") far more often than as a path.
+ */
+const SOURCE_ROOTS = new Set([
+  "src",
+  "lib",
+  "app",
+  "apps",
+  "test",
+  "tests",
+  "spec",
+  "specs",
+  "__tests__",
+  "packages",
+  "dist",
+  "build",
+  "scripts",
+  "bin",
+  "cmd",
+  "pkg",
+  "internal",
+  "vendor",
+  "node_modules",
+  ".github",
+  "docs",
+]);
+
+/**
  * Bare (un-backticked) file paths. Deliberately conservative: we only accept
  * tokens that contain a slash or are well-known dotfiles, because bare
  * "word.ext" tokens collide with framework names ("Node.js", "Vue.js") and
  * would produce false file claims.
+ *
+ * A slash alone is not enough — prose is full of slash-pairs ("web/UI",
+ * "stdout/stderr", "and/or", "client/server"). So a bare slash token only
+ * counts as a path when it carries a real code extension or sits under a known
+ * source root. Backticked paths take the more trusting `looksLikePath` route.
  */
 function barePaths(clause: string): string[] {
   const stripped = clause.replace(/`[^`]+`/g, " ");
@@ -307,7 +342,8 @@ function barePaths(clause: string): string[] {
   while (m !== null) {
     const tok = m[1];
     if (tok && !/^https?:/i.test(tok)) {
-      out.push(tok.replace(/[.,;:)\]]+$/, ""));
+      const cleaned = tok.replace(/[.,;:)\]]+$/, "");
+      if (isBareFilePath(cleaned)) out.push(cleaned);
     }
     m = re.exec(stripped);
   }
@@ -317,6 +353,15 @@ function barePaths(clause: string): string[] {
     if (re2.test(stripped)) out.push(sf);
   }
   return out;
+}
+
+/** A bare slash token is a path only with a real extension or a known root. */
+function isBareFilePath(tok: string): boolean {
+  const segs = tok.split("/").filter(Boolean);
+  if (segs.length < 2) return false;
+  const ext = extOf(tok);
+  if (ext !== null && CODE_EXTENSIONS.has(ext)) return true;
+  return SOURCE_ROOTS.has((segs[0] ?? "").toLowerCase());
 }
 
 function ranCommandKeyword(clause: string): string | null {
