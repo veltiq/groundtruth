@@ -75,12 +75,23 @@ npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-g
 Requires Node ≥ 20. No global install needed — the hook runs through `npx`.
 
 ```bash
-# Wire it into Claude Code as a Stop hook for this project (./.claude/settings.json)
+# Recommended: one command — hook + verify loop + status line, every project
+npx @veltiq/groundtruth setup
+```
+
+That's it. `setup` is idempotent and turns on the [verify loop](docs/verify-loop.md)
+(agents prove their work behaves before finishing). Prefer to wire it by hand?
+
+```bash
+# Just the claim-check Stop hook, for this project (./.claude/settings.json)
 npx @veltiq/groundtruth install
 
 # …or for every project (~/.claude/settings.json)
 npx @veltiq/groundtruth install --global
 ```
+
+> The loop can never trap you: a per-session round cap always lets a turn finish,
+> and `GROUNDTRUTH_NO_LOOP=1` instantly pauses it.
 
 Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g @veltiq/groundtruth` first (it installs the `groundtruth` command) and `install` auto-detects it. To check the current session without installing anything:
 

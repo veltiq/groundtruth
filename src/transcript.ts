@@ -34,6 +34,8 @@ export function parseTranscript(raw: string): Turn {
   const start = lastHumanIndex(entries);
   const turnEntries = entries.slice(start + 1);
 
+  const request = start >= 0 ? humanText(entries[start]?.message?.content) : undefined;
+
   const toolUses: ToolUse[] = [];
   let summary = "";
 
@@ -68,7 +70,24 @@ export function parseTranscript(raw: string): Turn {
     }
   }
 
-  return { summary, toolUses };
+  return request ? { summary, toolUses, request } : { summary, toolUses };
+}
+
+/** The plain text of a (human) message's content, or undefined. */
+function humanText(content: string | ContentBlock[] | undefined): string | undefined {
+  if (typeof content === "string") {
+    const t = content.trim();
+    return t.length > 0 ? t : undefined;
+  }
+  if (!Array.isArray(content)) return undefined;
+  const text = content
+    .filter(
+      (b): b is ContentBlock & { text: string } => b.type === "text" && typeof b.text === "string",
+    )
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+  return text.length > 0 ? text : undefined;
 }
 
 function parseJsonl(raw: string): TranscriptEntry[] {

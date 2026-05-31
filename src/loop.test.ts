@@ -85,6 +85,32 @@ describe("buildProtocol", () => {
     expect(out).toContain("printf pass > /tmp/x/abc.signal");
     expect(out).toContain("printf skip > /tmp/x/abc.signal");
   });
+
+  it("grounds the check in the human request when given one", () => {
+    const out = buildProtocol("/tmp/s", 1, 6, { request: "add a dark-mode toggle" });
+    expect(out).toContain("add a dark-mode toggle");
+    expect(out).toContain("request you must verify against");
+  });
+
+  it("leads with a browser screenshot for web work, naming the run cmd + url", () => {
+    const out = buildProtocol("/tmp/s", 1, 6, {
+      work: { kind: "web", runHint: "npm run dev", urlHint: "http://localhost:5173" },
+    });
+    expect(out).toMatch(/screenshot/i);
+    expect(out).toContain("npm run dev");
+    expect(out).toContain("http://localhost:5173");
+  });
+
+  it("tailors to an API by hitting the endpoint", () => {
+    const out = buildProtocol("/tmp/s", 1, 6, { work: { kind: "api" } });
+    expect(out).toMatch(/endpoint/i);
+    expect(out).toMatch(/status code/i);
+  });
+
+  it("falls back to a generic menu with no context (back-compat)", () => {
+    const out = buildProtocol("/tmp/s", 1, 6);
+    expect(out).toMatch(/Web → screenshot/);
+  });
 });
 
 describe("runLoopGate (IO)", () => {
