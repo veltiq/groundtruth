@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.0]
+
+### Added
+
+- **`groundtruth doctor`** — diagnose an install in one command. It checks Node,
+  the hook wiring (project + global), the binary, git evidence, config, whether a
+  transcript is discoverable, the verify-loop state, and the ledger — and prints
+  an actionable report with a clear next step when something's off (exit 1 if any
+  check fails). Answers the #1 onboarding question: "is it actually working?"
+- **Launch kit** under [`docs/launch/`](docs/launch/) — fact-checked go-to-market
+  drafts (Show HN, X thread, Reddit, Product Hunt, dev.to, the awesome-claude-code
+  submission, good-first-issues, and an ordered launch checklist), plus a new
+  [`docs/comparison.md`](docs/comparison.md) (groundtruth vs tests / manual review
+  / AI code reviewers) and a refreshed `assets/social-card.svg`.
+
+### Changed
+
+- **README** now cites the primary research it was built on — a 2026 study of
+  23,247 agentic PRs ([Gong et al., MSR'26](https://arxiv.org/abs/2601.04886))
+  found descriptions of never-implemented changes are the most common message-vs-
+  code inconsistency (45.4%), and those PRs were accepted 51.7% less often.
+
 ## [0.6.2]
 
 ### Changed

@@ -61,14 +61,14 @@ Your agent says _"Done! I added a `rateLimiter` to `src/server.ts`, fixed the ti
 
 ## Why
 
-Left unsupervised, AI agents confidently report work they never did — research on agentic PRs found these **"phantom changes" are the single most common inconsistency.** Tests catch code that's _wrong_; nothing catches code that was simply _never written_ but reported as done. That's the gap — and the faster agents code, the more slips through.
+Left unsupervised, AI agents confidently report work they never did. A 2026 study of **23,247 agentic pull requests** ([Gong et al., MSR'26](https://arxiv.org/abs/2601.04886)) found that descriptions claiming changes that were **never implemented are the single most common message-vs-code inconsistency (45.4%)** — and those PRs were accepted **51.7% less often**. Tests catch code that's _wrong_; nothing catches code that was simply _never written_ but reported as done. That's the gap — and the faster agents code, the more slips through.
 
 groundtruth closes it in two stages:
 
 1. **Verify the claims.** It reads the agent's end-of-turn summary, extracts each concrete claim, and grades it against the **ground truth** — which files changed, which symbols appear in the diff, whether tests or installs actually ran. Built on one rule: _the diff doesn't lie._
 2. **Make the agent prove it works** _(opt-in [verify loop](docs/verify-loop.md))._ Before finishing, the agent must run / **screenshot** / test the change against your original request, hunt for its own mistakes, and fix-and-recheck until it holds up.
 
-→ higher-quality output you don't have to babysit.
+→ higher-quality output you don't have to babysit. _([How it compares](docs/comparison.md) to tests, manual review, and AI code reviewers.)_
 
 ## Install
 
