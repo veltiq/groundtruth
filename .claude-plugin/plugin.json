@@ -1,7 +1,7 @@
 {
   "name": "groundtruth",
   "description": "The human-in-the-loop for AI coding: verify every turn against the real diff, then make the agent run/screenshot/test and self-fix before finishing.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "author": "Veltiq",
   "homepage": "https://github.com/veltiq/groundtruth",
   "license": "MIT",

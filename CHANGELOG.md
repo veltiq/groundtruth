@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.2]
+
+### Changed
+
+- **README rebuilt for conversion** — cut from 380 → ~248 lines following the
+  patterns of top OSS projects (uv, Bun, Zod, Hono): a tight hero (tagline +
+  badges incl. a live **monthly-downloads** badge), the before/after catch
+  screenshots up top, two-stage value prop, one-command install, and everything
+  optional folded into `<details>` or linked to `/docs`. All 8 translations
+  (zh-CN, es, pt-BR, fr, de, ja, ru, ar) regenerated to match. Docs only.
+
 ## [0.6.1]
 
 ### Changed
