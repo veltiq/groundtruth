@@ -15,6 +15,8 @@ export { buildReport, renderTerminal, renderJson, renderMarkdown } from "./repor
 export { analyze, runPipeline } from "./pipeline.js";
 export type { PipelineInput, PipelineResult } from "./pipeline.js";
 export { detectWorkKind, summarizeRequest } from "./intent.js";
+export { runDoctor, buildDoctorReport, scanSettings } from "./doctor.js";
+export type { DoctorReport, Check, CheckStatus } from "./doctor.js";
 export {
   type Adapter,
   ADAPTERS,

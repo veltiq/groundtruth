@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { AGENT_NAMES, autoDetect, getAdapter } from "./adapters/index.js";
 import { c } from "./colors.js";
 import { failingCount, loadConfig } from "./config.js";
+import { type Check, runDoctor } from "./doctor.js";
 import {
   type HookEvent,
   KNOWN_EVENTS,
@@ -44,6 +45,8 @@ async function main(argv: string[]): Promise<number> {
       return runVerify(rest);
     case "setup":
       return runSetup(rest);
+    case "doctor":
+      return runDoctorCmd(rest);
     case "install":
       return runInstall(rest);
     case "statusline":
@@ -330,6 +333,36 @@ function runSetup(args: string[]): number {
   return 0;
 }
 
+/** `groundtruth doctor` — diagnose the install and print a health report. */
+function runDoctorCmd(args: string[]): number {
+  const { values } = parseFlags(args, ["cwd"]);
+  const cwd = values.cwd ?? process.cwd();
+  const report = runDoctor(cwd, VERSION);
+
+  process.stdout.write(`${c.bold("groundtruth doctor")}${c.dim(` — ${cwd}`)}\n\n`);
+  const icon: Record<Check["status"], string> = {
+    ok: c.green("✓"),
+    warn: c.yellow("!"),
+    fail: c.red("✗"),
+  };
+  for (const ch of report.checks) {
+    process.stdout.write(`  ${icon[ch.status]} ${ch.name.padEnd(13)} ${c.dim(ch.detail)}\n`);
+    if (ch.hint && ch.status !== "ok") {
+      process.stdout.write(`    ${c.dim("→")} ${c.cyan(ch.hint)}\n`);
+    }
+  }
+
+  const parts = [c.green(`${report.ok} ok`)];
+  if (report.warn > 0) parts.push(c.yellow(`${report.warn} warning`));
+  if (report.fail > 0) parts.push(c.red(`${report.fail} failing`));
+  process.stdout.write(`\n  ${parts.join(c.dim(" · "))}\n`);
+  if (report.fail === 0 && report.warn === 0) {
+    process.stdout.write(`  ${c.green("All good — groundtruth is wired up and ready.")}\n`);
+  }
+  process.stdout.write("\n");
+  return report.fail > 0 ? 1 : 0;
+}
+
 /** `groundtruth statusline` — compact one-liner for the Claude Code status bar. */
 async function runStatusline(): Promise<number> {
   let cwd = process.cwd();
@@ -452,6 +485,7 @@ ${c.bold("Usage")}
 
 ${c.bold("Commands")}
   ${c.cyan("setup")}      One command: install the hook + verify loop + status line (recommended)
+  ${c.cyan("doctor")}     Diagnose the install — is the hook wired and working?
   ${c.cyan("verify")}     Check the latest Claude Code turn's claims against the diff
   ${c.cyan("install")}    Wire groundtruth into Claude Code as a Stop hook (fine-grained)
   ${c.cyan("stats")}      Show verdict tallies from the local ledger
