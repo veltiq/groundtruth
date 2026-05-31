@@ -1,18 +1,5 @@
 <p align="center">
-  <img src="assets/demo.svg" alt="groundtruth — catch when your AI coding assistant claims work it didn't do" width="820">
-</p>
-
-<p align="center">
-  <a href="https://github.com/veltiq/groundtruth/actions/workflows/ci.yml"><img src="https://github.com/veltiq/groundtruth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.npmjs.com/package/@veltiq/groundtruth"><img src="https://img.shields.io/npm/v/@veltiq/groundtruth?color=cb3837&logo=npm" alt="npm"></a>
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT">
-  <img src="https://img.shields.io/badge/node-%E2%89%A520-3fb950.svg" alt="Node >= 20">
-  <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg" alt="Zero runtime dependencies">
-  <a href="https://github.com/veltiq/groundtruth/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
-</p>
-
-<p align="center">
-  <b>English</b> ·
+  <a href="README.md"><b>English</b></a> ·
   <a href="docs/i18n/README.zh-CN.md">简体中文</a> ·
   <a href="docs/i18n/README.es.md">Español</a> ·
   <a href="docs/i18n/README.pt-BR.md">Português</a> ·
@@ -23,33 +10,48 @@
   <a href="docs/i18n/README.ar.md">العربية</a>
 </p>
 
-# groundtruth
+<p align="center">
+  <img src="assets/demo.svg" alt="groundtruth — the human-in-the-loop for AI coding" width="820">
+</p>
 
-> **TL;DR** — AI agents confidently say _"Done!"_ — then you find the typo, the half-finished function, the feature it never wrote. groundtruth is **the human-in-the-loop, automated**: it verifies every turn against the real diff, and (opt-in) makes the agent **run, screenshot, and test its own work and fix it** before it's allowed to finish. One command: `npx @veltiq/groundtruth setup`.
+<h1 align="center">groundtruth</h1>
 
-**The human-in-the-loop for AI coding. Catch when your assistant lies, leaves typos, or skips work — before you do.**
+<p align="center">
+  <b>The human-in-the-loop for AI coding — automated.</b><br>
+  Catch when your AI agent lies, leaves typos, or skips work — then make it prove the work before it says "done."
+</p>
 
-Your agent ends a turn with _"Done! I added a `rateLimiter` middleware to `src/server.ts`, fixed the timeout bug, and added tests."_ You trust the summary, commit, and move on. Two weeks later production breaks — the rate limiter was never written. The summary lied (or hallucinated), and nothing checked it against the actual diff.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@veltiq/groundtruth"><img src="https://img.shields.io/npm/v/@veltiq/groundtruth?color=cb3837&logo=npm" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@veltiq/groundtruth"><img src="https://img.shields.io/npm/dm/@veltiq/groundtruth?color=cb3837&label=downloads" alt="npm downloads"></a>
+  <a href="https://github.com/veltiq/groundtruth/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/veltiq/groundtruth/ci.yml?branch=main&label=CI" alt="CI"></a>
+  <a href="https://github.com/veltiq/groundtruth/stargazers"><img src="https://img.shields.io/github/stars/veltiq/groundtruth?style=flat&color=f5c518" alt="GitHub stars"></a>
+  <img src="https://img.shields.io/npm/l/@veltiq/groundtruth?color=blue" alt="MIT license">
+  <img src="https://img.shields.io/badge/runtime%20deps-0-3fb950" alt="Zero runtime dependencies">
+</p>
 
-Left alone, an AI agent will confidently report work it didn't do, miss requirements you asked for, and leave typos and half-edits behind — and the faster they code, the more of this slips through. `groundtruth` closes that gap. It does what a careful human reviewer does, automatically, on **every** turn:
+```bash
+npx @veltiq/groundtruth setup
+```
 
-1. **Verifies the claims.** It reads the assistant's end-of-turn summary, extracts each concrete claim, and checks it against what actually changed — the **ground truth**. Phantom work gets flagged before you trust it.
-2. **Makes the agent prove it works** _(opt-in [verify loop](docs/verify-loop.md))_. Before finishing, the agent must actually run / screenshot / test the change against your original request, hunt for its own mistakes, and **fix-and-recheck until it holds up** — web work gets opened in a real browser and screenshotted, CLIs get run, APIs get hit, libraries get tested.
+---
 
-The result: higher-quality output you don't have to babysit. It runs automatically as a [Claude Code](https://code.claude.com) hook, or on demand from the CLI — deterministically, with **zero LLM calls** for the claim check.
+Your agent says _"Done! I added a `rateLimiter` to `src/server.ts`, fixed the timeout, and added tests."_ You commit and move on. Two weeks later production breaks — the rate limiter was never written. **The summary lied, and nothing checked it against the diff.**
+
+`groundtruth` is the reviewer that does, on **every** turn — deterministically, with **zero LLM calls** for the check:
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-**When the summary lies.** The whole "codebase" here was a single README edit — every claim is a phantom:
+**When the summary lies** — every claim here is a phantom (the whole "codebase" was one README edit):
 
 <img src="assets/screenshot-catch.png" alt="groundtruth flags three claims the diff doesn't support" width="100%">
 
 </td>
 <td width="50%" valign="top">
 
-**When it's honest.** The same kind of summary, but each claim is backed by the real diff:
+**When it's honest** — the same kind of summary, each claim backed by the real diff:
 
 <img src="assets/screenshot-verified.png" alt="groundtruth verifies four honest claims against the diff" width="100%">
 
@@ -57,324 +59,190 @@ The result: higher-quality output you don't have to babysit. It runs automatical
 </tr>
 </table>
 
-> Real, unedited output. groundtruth caught all three phantom claims on the left and cleared all four honest ones on the right — deterministically, with **zero LLM calls**.
+## Why
 
----
+Left unsupervised, AI agents confidently report work they never did — research on agentic PRs found these **"phantom changes" are the single most common inconsistency.** Tests catch code that's _wrong_; nothing catches code that was simply _never written_ but reported as done. That's the gap — and the faster agents code, the more slips through.
 
-## Why this exists
+groundtruth closes it in two stages:
 
-Research on agentic pull requests found that **"phantom changes" — work the description claims but never implements — are the single most common kind of inconsistency.** Tests and CI catch code that's _wrong_; nothing catches code that was simply _never written_ but confidently reported as done. That's the gap groundtruth fills.
+1. **Verify the claims.** It reads the agent's end-of-turn summary, extracts each concrete claim, and grades it against the **ground truth** — which files changed, which symbols appear in the diff, whether tests or installs actually ran. Built on one rule: _the diff doesn't lie._
+2. **Make the agent prove it works** _(opt-in [verify loop](docs/verify-loop.md))._ Before finishing, the agent must run / **screenshot** / test the change against your original request, hunt for its own mistakes, and fix-and-recheck until it holds up.
 
-It is built on one principle: **the diff doesn't lie.** Natural-language summaries are graded against deterministic facts (which files changed, which symbols appear in the added lines, whether a test file or install command actually ran), never against another model's opinion.
-
-## Try it in 30 seconds
-
-No install, no config — see it catch a phantom change against a canned transcript:
-
-```bash
-npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
-```
+→ higher-quality output you don't have to babysit.
 
 ## Install
 
-Requires Node ≥ 20. No global install needed — the hook runs through `npx`.
+Requires Node ≥ 20. One command wires the Stop hook + verify loop + status line, idempotently:
 
 ```bash
-# Recommended: one command — hook + verify loop + status line, every project
 npx @veltiq/groundtruth setup
 ```
 
-That's it. `setup` is idempotent and turns on the [verify loop](docs/verify-loop.md)
-(agents prove their work behaves before finishing). Prefer to wire it by hand?
+Restart Claude Code (or run `/hooks`) and it checks every turn automatically.
+
+<details>
+<summary>Try it in 30 seconds · manual install · plugin</summary>
 
 ```bash
-# Just the claim-check Stop hook, for this project (./.claude/settings.json)
-npx @veltiq/groundtruth install
+# See it catch a phantom change against a canned transcript — no install, no config:
+npx @veltiq/groundtruth verify --transcript examples/phantom-change.jsonl --no-git
 
-# …or for every project (~/.claude/settings.json)
+# Check the current session without installing anything:
+npx @veltiq/groundtruth verify
+
+# Just the claim-check hook (no loop), this project or globally:
+npx @veltiq/groundtruth install
 npx @veltiq/groundtruth install --global
 ```
 
-> The loop can never trap you: a per-session round cap always lets a turn finish,
-> and `GROUNDTRUTH_NO_LOOP=1` instantly pauses it.
-
-Restart Claude Code (or run `/hooks`) and groundtruth checks every turn automatically. Want a faster, always-on binary? Run `npm i -g @veltiq/groundtruth` first (it installs the `groundtruth` command) and `install` auto-detects it. To check the current session without installing anything:
-
-```bash
-npx @veltiq/groundtruth verify
-```
-
-Prefer plugins? Add the marketplace and install in one step:
+Prefer plugins?
 
 ```text
 /plugin marketplace add veltiq/groundtruth
 /plugin install groundtruth
 ```
 
+</details>
+
+> The loop can never trap you: a per-session round cap always lets a turn finish, and `GROUNDTRUTH_NO_LOOP=1` instantly pauses it.
+
 ## How it works
-
-```mermaid
-flowchart LR
-  A["Turn<br/>summary + tool calls"] --> B["Evidence<br/>diff · ground truth"]
-  A --> C["Claims<br/>parsed from prose"]
-  B --> D{"Verify<br/>each claim"}
-  C --> D
-  D -->|"backed by the diff"| V["✅ verified"]
-  D -->|"checkable, zero evidence"| U["❌ unsupported"]
-  D -->|"vague / semantic"| R["⚠️ review"]
-```
-
-<details><summary>Text version</summary>
 
 ```text
 transcript ─▶ Turn ─▶ ( Evidence + Claims ) ─▶ Verdicts ─▶ Report
-            summary      diff       prose      per-claim
-            + tools    ground truth  parse      check
+            summary       diff      prose       per-claim
+            + tools    ground truth  parse        check
 ```
-
-</details>
-
-1. **Read the turn.** Parse the Claude Code JSONL transcript for the latest turn: the assistant's final summary plus every tool it called (`Write`, `Edit`, `MultiEdit`, `Bash`, …).
-2. **Collect ground truth.** Build evidence from those tool calls (precise, turn-scoped) plus the git working-tree diff (corroborating). This is the set of files touched, text added/removed, and commands run.
-3. **Extract claims.** Pull concrete assertions out of the prose, anchored on strong signals — backticked identifiers, real file paths, test/dependency keywords. Statements of _intent_ ("I'll add…") are ignored.
-4. **Verify.** Check each claim against the evidence and assign a verdict.
 
 | Verdict | Meaning |
 |---|---|
-| ✅ **verified** | Concrete evidence backs the claim. |
-| ❌ **unsupported** | The claim is concretely checkable and has **zero** matching evidence — a phantom change. |
-| ⚠️ **review** | Semantic or ambiguous (e.g. _"fixed the bug"_) — shown for your attention, **never** counted as a failure. |
+| ✅ **verified** | Concrete evidence in the diff backs the claim. |
+| ❌ **unsupported** | Concretely checkable and **zero** matching evidence — a phantom change. |
+| ⚠️ **review** | Vague or semantic (_"fixed the bug"_) — shown for attention, **never** a failure. |
 
-### A deliberate bias toward silence
+**A deliberate bias toward silence:** false alarms get a tool like this uninstalled, so a claim is only `unsupported` when it's unambiguously checkable and nothing supports it. Everything fuzzy becomes `review`. It would rather miss a claim than wrongly accuse a correct one. → [`docs/how-it-works.md`](docs/how-it-works.md) · [`docs/design.md`](docs/design.md)
 
-False alarms are what get a tool like this uninstalled, so the rules are conservative by design: a claim is only marked **unsupported** when it is unambiguously checkable and nothing supports it. Anything vague becomes **review**, not a failure. groundtruth would rather miss a questionable claim than wrongly accuse a correct one. See [`docs/design.md`](docs/design.md).
+## Verify loop — make the agent prove it (opt-in)
 
-## Usage
+<p align="center">
+  <img src="assets/loop-demo.svg" alt="The loop screenshots a page, catches an invisible button, fixes it, and re-verifies — no human needed" width="760">
+</p>
+
+The claim check grades a turn's _words_; the loop grades its _behavior_. With it on (`setup` enables it, or `GROUNDTRUTH_LOOP=1`), a turn that changed something is held at the Stop event and the agent must verify by the **kind of work** — open the page in a browser and read a screenshot (web), run the command (CLI), hit the endpoint (API), run the tests (library) — check it against your **original request**, fix any mistakes, and only finish once it passes. It never judges the work itself (no false positives of its own) and a round cap means it can't loop forever. → [`docs/verify-loop.md`](docs/verify-loop.md)
+
+## More
+
+<details>
+<summary><b>CLI usage & flags</b></summary>
 
 ```bash
 groundtruth verify                       # check the latest session for this project
-groundtruth verify --transcript x.jsonl  # check a specific transcript
-groundtruth verify --markdown            # emit markdown (great as a PR comment)
-groundtruth verify --json                # machine-readable output
+groundtruth verify --transcript x.jsonl  # a specific transcript
+groundtruth verify --markdown            # markdown (great as a PR comment)
+groundtruth verify --json | --sarif      # machine-readable / GitHub code scanning
 groundtruth verify --strict              # exit non-zero if anything is unsupported
-
-groundtruth install [--global] [--npx] [--strict] [--loop] [--print]
+groundtruth stats [--all]                # local tally: verified / unsupported / review
+groundtruth install --events Stop,SubagentStop,SessionEnd --statusline
 ```
 
-By default the hook is **non-blocking**: it prints its report and gets out of the way. Pass `--strict` (or set `GROUNDTRUTH_STRICT=1`) to make it block the turn when unsupported claims are found.
-
-## What it checks
-
-| Claim type | Example | Verified when… |
-|---|---|---|
-| **file** | _"updated `src/auth.ts`"_ | that file was touched this turn |
-| **symbol** | _"added a `validateInput` function"_ | the identifier appears in the added (or removed) code |
-| **test** | _"added tests"_ | a test file changed or a test command ran |
-| **dependency** | _"installed `zod`"_ | a manifest changed or an install command ran |
-| **command** | _"ran the build"_ | a matching command ran via the Bash tool (advisory) |
-| **action** | _"fixed the timeout bug"_ | — not machine-checkable; flagged for review |
-
-Full details in [`docs/claim-types.md`](docs/claim-types.md).
-
-<details>
-<summary><b>Walk through one turn →</b></summary>
-
-The assistant ends with:
-
-> _"Added a `rateLimiter` in `src/rate-limit.ts`, wired it into `src/server.ts`, and ran the tests."_
-
-groundtruth extracts four claims and checks each against the diff (this is the right-hand screenshot above):
-
-| Claim | Kind | Verdict | Why |
-|---|---|---|---|
-| `rateLimiter` | symbol | ✅ verified | appears in the added code |
-| `src/rate-limit.ts` | file | ✅ verified | created this turn |
-| `src/server.ts` | file | ✅ verified | edited this turn |
-| ran the tests | command | ✅ verified | `npm test` ran via the Bash tool |
-
-Swap in a phantom — say the rate limiter was never written — and only that line flips to ❌ **unsupported**. Everything else stays green.
+By default the hook is **non-blocking** — it prints a report and gets out of the way. `--strict` (or `GROUNDTRUTH_STRICT=1`) makes it block on unsupported claims.
 
 </details>
 
-## Verify loop — behavioral checks (opt-in)
+<details>
+<summary><b>What it checks</b></summary>
 
-The claim check grades a turn's _words_. The **verify loop** grades its _behavior_: before the agent may finish a turn that changed something, it has to actually run / screenshot / test the work and prove it does what you asked — fixing and re-checking until it does.
+| Claim | Example | Verified when… |
+|---|---|---|
+| **file** | _"updated `src/auth.ts`"_ | that file was touched this turn |
+| **symbol** | _"added `validateInput`"_ | the identifier appears in the added/removed code |
+| **test** | _"added tests"_ | a test file changed or a test command ran |
+| **dependency** | _"installed `zod`"_ | a manifest changed or an install command ran |
+| **command** | _"ran the build"_ | a matching command ran via Bash (advisory) |
+| **action** | _"fixed the timeout bug"_ | not machine-checkable → flagged for review |
 
-<p align="center">
-  <img src="assets/loop-demo.svg" alt="The loop screenshots a page, catches an invisible button, fixes it, and re-verifies — no human in the loop" width="760">
-</p>
+Full details in [`docs/claim-types.md`](docs/claim-types.md).
 
-<p align="center"><sub>A real run: the agent said "done", the loop screenshotted the page, saw the CTA button hadn't rendered, fixed it, and re-shot to confirm.</sub></p>
+</details>
 
-```bash
-groundtruth install --loop          # add the loop to the Stop hook
-# or per project:   { "loop": { "enabled": true } } in .groundtruthrc.json
-# or one-off:       GROUNDTRUTH_LOOP=1
-```
+<details>
+<summary><b>Use in CI · commit messages · pre-commit</b></summary>
 
-When it's on, a turn that used a mutating tool (`Write` / `Edit` / `Bash` / …) is held at the Stop event and handed a short protocol: spawn a fresh sub-checker that verifies by the kind of work — open the page in a browser and read a screenshot (web), run the command (CLI), hit the endpoint (API), run the tests (library) — check it against the original request, and only release the turn once the agent writes a `pass` verdict.
-
-Two guarantees keep it in the same bias-toward-silence spirit as the rest of the tool:
-
-- **It never judges the work itself.** groundtruth only gates the Stop and counts rounds; the agent performs and reports the verification. No screenshot is graded by groundtruth, so the loop adds no false positives of its own.
-- **It can't loop forever.** A per-session round counter gives up after `maxRounds` (default 6) and lets the turn finish.
-
-Pure-conversation turns (no tools) are never gated. Full details in [`docs/verify-loop.md`](docs/verify-loop.md).
-
-## Use in CI (GitHub Action)
-
-Post claim verdicts as a sticky comment on every PR — grading the **PR description against the diff**, so it works on any PR with zero agent setup. (groundtruth runs this on its own PRs.)
+Grade a **PR description against its diff** as a sticky comment (works on any PR, zero agent setup):
 
 ```yaml
 # .github/workflows/groundtruth.yml
 name: groundtruth
 on: pull_request
-permissions:
-  contents: read
-  pull-requests: write
+permissions: { contents: read, pull-requests: write }
 jobs:
   claim-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
-      - uses: veltiq/groundtruth@v0.3.0
+      - uses: veltiq/groundtruth@v0.6.1   # add  with: { strict: true }  to gate merges
 ```
 
-Add `with: { strict: true }` to turn it into a merge gate. Full options in [docs/github-action.md](docs/github-action.md).
-
-### Locally, against your commit message
-
-`--staged` checks a message against what's actually staged — drop this in `.git/hooks/commit-msg` (or a [lefthook](https://github.com/evilmartians/lefthook)/husky `commit-msg` hook):
-
-```sh
-#!/bin/sh
-# .git/hooks/commit-msg — verify the commit message against the staged diff
-npx @veltiq/groundtruth verify --summary "$1" --staged
-# add --strict to abort the commit when a claim is unsupported
-```
-
-Prefer [pre-commit](https://pre-commit.com)? Add this to `.pre-commit-config.yaml`:
+Verify a commit message against the staged diff — drop in `.git/hooks/commit-msg`, or via [pre-commit](https://pre-commit.com):
 
 ```yaml
 repos:
   - repo: https://github.com/veltiq/groundtruth
-    rev: v0.5.0
+    rev: v0.6.1
     hooks:
       - id: groundtruth
-        verbose: true          # show the report even when nothing fails
-        # args: ["--strict"]   # and abort the commit on an unsupported claim
 ```
 
-Then `pre-commit install --hook-type commit-msg`.
+→ [docs/github-action.md](docs/github-action.md)
 
-## Configuration
+</details>
 
-Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` key in package.json):
+<details>
+<summary><b>Other agents · config · library API</b></summary>
+
+`verify` reads other agents' transcripts too — the claim engine is agent-neutral:
+
+```bash
+groundtruth verify --agent codex|gemini|cursor|opencode|aider|auto
+```
+
+Optional `.groundtruthrc.json` (or a `"groundtruth"` key in package.json):
 
 ```json
 {
   "strict": false,
-  "failOn": ["unsupported"],
-  "shadow": false,
   "ignore": ["CHANGELOG.md", "*.generated.ts"],
   "ignoreKinds": ["command"],
-  "output": "terminal",
   "loop": { "enabled": false, "maxRounds": 6 }
 }
 ```
 
-- **`ignore`** — claim targets to skip (substring or `*` glob). Your escape hatch for any false positive.
-- **`ignoreKinds`** — whole claim kinds to skip (`file`, `symbol`, `test`, `dependency`, `command`, `action`).
-- **`strict`** / **`output`** — defaults for blocking and output format.
-- **`failOn`** — which verdict levels count as a failure in strict mode (default `["unsupported"]`).
-- **`shadow`** — record to the ledger but never print or block (for gradual rollout).
-- **`loop`** — the opt-in [verify loop](#verify-loop--behavioral-checks-opt-in): `enabled` turns it on, `maxRounds` (clamped 2–20, default 6) caps the rounds before it gives up.
-
-Install into more hook events for multi-agent workflows:
-
-```bash
-npx @veltiq/groundtruth install --events Stop,SubagentStop,SessionEnd
-```
-
-`SubagentStop` checks each subagent's turn; `SessionEnd` prints a per-session digest.
-
-## Other agents
-
-The Stop hook is Claude Code-specific, but `verify` reads other agents' transcripts too — the claim engine is agent-neutral:
-
-```bash
-groundtruth verify --agent codex     # OpenAI Codex CLI
-groundtruth verify --agent gemini    # Gemini CLI
-groundtruth verify --agent cursor    # Cursor (agent-transcripts, or state.vscdb on older builds)
-groundtruth verify --agent opencode  # OpenCode
-groundtruth verify --agent aider     # Aider (best-effort)
-groundtruth verify --agent auto      # pick the most recent across all
-```
-
-Each adapter normalizes the agent's transcript into the same `{summary, toolUses}` shape. New adapters are a great contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-> Older Cursor builds keep sessions in a SQLite store (`globalStorage/state.vscdb`) instead of JSONL. groundtruth reads it automatically via `node:sqlite` (Node 24+, or Node 22 with `--experimental-sqlite`); on older Node it falls back to the JSONL transcripts.
-
-## Stats & status bar
-
-The hook keeps a privacy-safe local tally (counts only — never code or prompts, in `~/.groundtruth/ledger.jsonl`):
-
-```bash
-groundtruth stats          # this project: turns, verified, unsupported, to-review (7d/30d/all)
-groundtruth stats --all    # across every project
-```
-
-Show a live count in the Claude Code status bar (`🔎 gt 3❌ ·7d`):
-
-```bash
-npx @veltiq/groundtruth install --statusline
-```
-
-## Honest limitations
-
-- It verifies that claimed work **exists in the diff**, not that it is **correct**. _"Fixed the bug"_ can be confirmed to touch the right code; it cannot be confirmed to actually fix anything. That's what tests are for.
-- Extraction favors precision over recall — it will miss vaguely-worded claims rather than risk a false accusation.
-- Today it targets the Claude Code transcript format. The core (`extractClaims`, `verifyClaims`) is format-agnostic; adapters for other agents are welcome — see [Contributing](CONTRIBUTING.md).
-
-## Use as a library
+`ignore` is your escape hatch for any false positive. Use as a library:
 
 ```ts
 import { runPipeline, renderMarkdown } from "@veltiq/groundtruth";
-
 const report = runPipeline({ transcriptPath: "session.jsonl", cwd: process.cwd() });
 console.log(renderMarkdown(report));
 ```
 
-## FAQ
+</details>
 
-**Does it send my code anywhere?**
-No. It runs entirely locally — reads your transcript and `git`, writes nothing except when you run `install`. Zero network calls, zero runtime dependencies.
+<details>
+<summary><b>Privacy & honest limitations</b></summary>
 
-**Will it block my commits or get in the way?**
-No. By default it just prints a report and exits cleanly. Blocking is strictly opt-in (`--strict`).
+- **Runs entirely locally.** Reads your transcript and `git`, writes nothing except on `install`. Zero network calls, zero runtime deps. The local tally (`~/.groundtruth/ledger.jsonl`) stores counts only — never code or prompts.
+- It verifies claimed work **exists in the diff**, not that it's **correct** — that's what tests (and the verify loop) are for.
+- Extraction favors precision over recall: it misses vague claims rather than risk a false accusation.
 
-**Isn't this what tests are for?**
-Tests catch code that's _wrong_. groundtruth catches code that was _never written_ but reported as done — there's nothing for a test to run. They're complementary.
-
-**Does it work with Cursor / other agents?**
-The engine is format-agnostic; today it ships a Claude Code transcript adapter. Adapters for other agents are a great first contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-**Will it falsely accuse me?**
-It's tuned hard against that. A claim is only `unsupported` when it's concretely checkable and nothing supports it; everything fuzzy is shown as advisory, never a failure.
+</details>
 
 ## Contributing
 
-Issues and PRs welcome — especially new claim patterns, agent adapters, and false-positive reports (those are gold). See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Issues and PRs welcome — especially new claim patterns, agent adapters, and false-positive reports (those are gold). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Star history
-
-If groundtruth ever catches your agent in a lie, a ⭐ helps other people find it.
-
-<a href="https://star-history.com/#veltiq/groundtruth&Date">
-  <img src="https://api.star-history.com/svg?repos=veltiq/groundtruth&type=Date" alt="Star History Chart" width="600">
-</a>
+If groundtruth ever catches your agent in a lie, a ⭐ helps others find it.
 
 ## License
 
-[MIT](LICENSE) © Veltiq
+[MIT](LICENSE) © [Veltiq](https://veltiq.net)
