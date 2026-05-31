@@ -1,6 +1,6 @@
 {
   "name": "@veltiq/groundtruth",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "The human-in-the-loop for AI coding, automated. Catch when your agent lies, leaves typos, or skips work — verify every turn against the real diff, then make it run/screenshot/test and self-fix before finishing. Claude Code hook + CLI.",
   "keywords": [
     "claude",
