@@ -14,6 +14,8 @@ export interface InstallOptions {
   bin?: boolean;
   /** Make the hook block when claims fail. */
   strict?: boolean;
+  /** Enable the behavioral verify loop (run/screenshot/test before finishing). */
+  loop?: boolean;
   /** Hook events to install into (default: ["Stop"]). */
   events?: HookEvent[];
   /** Project directory (defaults to process.cwd()). */
@@ -57,7 +59,8 @@ export function hookCommand(opts: InstallOptions): string {
   // globally, so `npx @veltiq/groundtruth install` produces a hook that runs.
   // The global binary is named `groundtruth` regardless of the package scope.
   const base = opts.bin ? "groundtruth hook" : "npx -y @veltiq/groundtruth hook";
-  return opts.strict ? `${base} --strict` : base;
+  const flags = [opts.strict ? "--strict" : "", opts.loop ? "--loop" : ""].filter(Boolean);
+  return flags.length > 0 ? `${base} ${flags.join(" ")}` : base;
 }
 
 /** True if a `groundtruth` binary is already resolvable on PATH. */

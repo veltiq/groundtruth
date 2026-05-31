@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Claim, ClaimKind, Config, FailLevel, Report } from "./types.js";
+import { clampMaxRounds } from "./loop.js";
+import type { Claim, ClaimKind, Config, FailLevel, LoopConfig, Report } from "./types.js";
 
 const RC_FILE = ".groundtruthrc.json";
 const VALID_FAIL_LEVELS: ReadonlySet<string> = new Set(["unsupported", "unverifiable"]);
@@ -70,7 +71,19 @@ function sanitize(input: unknown): Config {
   if (typeof input.output === "string" && VALID_OUTPUTS.has(input.output)) {
     out.output = input.output as Config["output"];
   }
+  const loop = sanitizeLoop(input.loop);
+  if (loop) out.loop = loop;
   return out;
+}
+
+function sanitizeLoop(input: unknown): LoopConfig | undefined {
+  if (!isRecord(input)) return undefined;
+  const loop: LoopConfig = {};
+  if (typeof input.enabled === "boolean") loop.enabled = input.enabled;
+  if (typeof input.maxRounds === "number" && Number.isFinite(input.maxRounds)) {
+    loop.maxRounds = clampMaxRounds(input.maxRounds);
+  }
+  return Object.keys(loop).length > 0 ? loop : undefined;
 }
 
 function readJson(path: string): Record<string, unknown> | undefined {

@@ -65,6 +65,27 @@ describe("loadConfig", () => {
     expect(config.ignoreKinds).toEqual(["action"]);
     expect(config.output).toBeUndefined();
   });
+
+  it("reads the verify loop config and clamps maxRounds", () => {
+    writeFileSync(
+      join(dir, ".groundtruthrc.json"),
+      JSON.stringify({ loop: { enabled: true, maxRounds: 999 } }),
+    );
+    expect(loadConfig(dir).loop).toEqual({ enabled: true, maxRounds: 20 });
+  });
+
+  it("ignores a malformed loop block but keeps valid keys", () => {
+    writeFileSync(
+      join(dir, ".groundtruthrc.json"),
+      JSON.stringify({ loop: { enabled: "sure", maxRounds: "lots" } }),
+    );
+    expect(loadConfig(dir).loop).toBeUndefined();
+  });
+
+  it("omits loop entirely when not configured", () => {
+    writeFileSync(join(dir, ".groundtruthrc.json"), JSON.stringify({ strict: true }));
+    expect(loadConfig(dir).loop).toBeUndefined();
+  });
 });
 
 describe("applyConfig", () => {

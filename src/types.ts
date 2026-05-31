@@ -88,6 +88,14 @@ export interface Report {
 /** Verdict levels that can cause a strict failure. */
 export type FailLevel = "unsupported" | "unverifiable";
 
+/** Opt-in behavioral verify loop: make the agent run/screenshot/test before finishing. */
+export interface LoopConfig {
+  /** Turn the loop on. Off by default. */
+  enabled?: boolean;
+  /** Hard cap on block rounds before the loop gives up (clamped 2..20). */
+  maxRounds?: number;
+}
+
 /** User configuration, from `.groundtruthrc.json` or a `groundtruth` key in package.json. */
 export interface Config {
   /** Default for the hook: block the turn when claims fail. */
@@ -102,4 +110,6 @@ export interface Config {
   ignoreKinds?: ClaimKind[];
   /** Default output format for `verify`. */
   output?: "terminal" | "json" | "markdown";
+  /** Behavioral verify loop (off by default). */
+  loop?: LoopConfig;
 }

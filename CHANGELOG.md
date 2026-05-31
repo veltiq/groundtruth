@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Verify loop** (`install --loop`, a `loop` config block, or `GROUNDTRUTH_LOOP=1`)
+  — an opt-in behavioral gate. After the claim check passes, a turn that changed
+  something is held at the Stop event and asked to actually run / screenshot /
+  test the work and prove it matches the request, fixing and re-checking until
+  it does. groundtruth only gates the stop and counts rounds — it never judges
+  the work itself, so the loop adds no false positives; a per-session round cap
+  (`maxRounds`, default 6) guarantees it can never loop forever. Pure
+  conversation turns are never gated. See [`docs/verify-loop.md`](docs/verify-loop.md).
+
 ## [0.5.0]
 
 ### Added

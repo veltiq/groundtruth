@@ -15,8 +15,10 @@ import {
   settingsPathFor,
 } from "./install.js";
 import { type LedgerSummary, buildStats, readLedger, recordRun, summarize } from "./ledger.js";
+import { DEFAULT_MAX_ROUNDS, runLoopGate, turnDidWork } from "./loop.js";
 import { runPipeline } from "./pipeline.js";
 import { renderJson, renderMarkdown, renderSarif, renderTerminal } from "./report.js";
+import { parseTranscriptFile } from "./transcript.js";
 import type { Turn } from "./types.js";
 
 const VERSION = readVersion();
@@ -90,7 +92,8 @@ async function runHook(args: string[]): Promise<number> {
   const strict =
     args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1" || config.strict === true;
 
-  const report = runPipeline({ transcriptPath, cwd, config });
+  const turn = parseTranscriptFile(transcriptPath);
+  const report = runPipeline({ turn, cwd, config });
   recordRun(report, cwd, payload.session_id);
 
   if (config.shadow) return 0; // record only — never print or block
@@ -107,6 +110,27 @@ async function runHook(args: string[]): Promise<number> {
       c.red(`groundtruth: ${fails} failing claim(s) — verify before continuing.\n`),
     );
     return 2; // blocks Stop and feeds the reason back to the agent
+  }
+
+  // Behavioral verify loop (opt-in): once the claims hold up, require the agent
+  // to actually run / screenshot / test the work before it may finish. The
+  // round counter inside runLoopGate guarantees this can never loop forever.
+  const loopEnabled =
+    args.includes("--loop") ||
+    process.env.GROUNDTRUTH_LOOP === "1" ||
+    config.loop?.enabled === true;
+  if (loopEnabled && turnDidWork(turn)) {
+    const maxRounds = config.loop?.maxRounds ?? DEFAULT_MAX_ROUNDS;
+    const gate = runLoopGate({ cwd, session: payload.session_id, maxRounds });
+    if (gate.block && gate.message) {
+      process.stderr.write(`\n${gate.message}\n`);
+      return 2;
+    }
+    if (gate.gaveUp) {
+      process.stderr.write(
+        c.yellow(`groundtruth: verify loop gave up after ${maxRounds} rounds without a verdict.\n`),
+      );
+    }
   }
   return 0;
 }
@@ -203,6 +227,7 @@ function runInstall(args: string[]): number {
     global: flags.has("global"),
     bin: useBin,
     strict: flags.has("strict"),
+    loop: flags.has("loop"),
     events,
     cwd: values.cwd,
   };
@@ -380,6 +405,7 @@ ${c.bold("install options")}
   --bin                 Invoke the global "groundtruth" binary (auto-detected)
   --npx                 Force the "npx -y groundtruth" form
   --strict              Make the hook block on failing claims
+  --loop                Add the behavioral verify loop (run/screenshot/test before finishing)
   --events <list>       Hook events to install (default: Stop). e.g. Stop,SubagentStop,SessionEnd
   --statusline          Also wire the status-bar line (if none is set)
   --print               Print the settings snippet instead of writing it
