@@ -82,4 +82,25 @@ describe("detectWorkKind", () => {
     );
     expect(ctx.kind).toBe("web");
   });
+
+  it("does NOT mislabel backend app/ code as web (FastAPI/Rails layout)", () => {
+    // `app/` is a UI-ish dir, but a real API idiom must win — no screenshot guidance.
+    const ctx = detectWorkKind(
+      ev({ touchedFiles: ["app/routes.py"], addedText: "@app.get('/users')\nfastapi()" }),
+    );
+    expect(ctx.kind).toBe("api");
+  });
+
+  it("still flags a Next.js app-router page (real web extension) as web", () => {
+    expect(detectWorkKind(ev({ touchedFiles: ["app/page.tsx"] })).kind).toBe("web");
+  });
+
+  it("for web, prefers the dev-tool URL over a stray listen() port in the diff", () => {
+    const ctx = detectWorkKind(
+      ev({ touchedFiles: ["src/App.tsx"], addedText: "fetch('/api'); app.listen(8080)" }),
+      { scripts: { dev: "vite" } },
+    );
+    expect(ctx.kind).toBe("web");
+    expect(ctx.urlHint).toBe("http://localhost:5173");
+  });
 });
