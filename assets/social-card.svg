@@ -1,15 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="groundtruth social preview">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="groundtruth — the human-in-the-loop for AI coding, automated. Verifies what an AI coding agent says it did against the real diff.">
+  <!-- canvas -->
   <rect width="1280" height="640" fill="#0d1117"/>
-  <rect x="64" y="64" width="1152" height="512" rx="20" fill="#010409" stroke="#30363d"/>
+  <!-- inset card -->
+  <rect x="48.5" y="48.5" width="1183" height="543" rx="24" fill="#010409" stroke="#30363d"/>
 
-  <text x="112" y="190" font-size="76" font-weight="700" fill="#e6edf3">ground<tspan fill="#3fb950">truth</tspan></text>
-  <text x="116" y="244" font-size="28" fill="#8b949e">Verify what your AI says it did — against the actual diff.</text>
+  <!-- terminal traffic lights (top-right of card) -->
+  <circle cx="1140" cy="100" r="7" fill="#ff5f56"/>
+  <circle cx="1164" cy="100" r="7" fill="#ffbd2e"/>
+  <circle cx="1188" cy="100" r="7" fill="#27c93f"/>
+
+  <!-- wordmark -->
+  <text x="104" y="138" font-size="72" font-weight="700" fill="#e6edf3">ground<tspan fill="#3fb950">truth</tspan></text>
+  <!-- tagline (verbatim) -->
+  <text x="106" y="186" font-size="30" fill="#8b949e">The human-in-the-loop for AI coding — automated</text>
+
+  <!-- faux terminal panel -->
+  <rect x="104" y="226" width="1072" height="270" rx="14" fill="#0d1117" stroke="#30363d"/>
+  <text x="136" y="266" font-size="20" font-weight="700" fill="#e6edf3">groundtruth<tspan fill="#6e7681" font-weight="400"> — claim check</tspan></text>
+  <text x="1144" y="266" font-size="16" fill="#6e7681" text-anchor="end">claude code stop hook</text>
+  <line x1="136" y1="282" x2="1144" y2="282" stroke="#30363d"/>
 
   <g font-size="30">
-    <text x="116" y="338"><tspan fill="#3fb950">✓ verified</tspan><tspan fill="#6e7681">     file </tspan><tspan fill="#58a6ff">src/auth.ts</tspan></text>
-    <text x="116" y="394"><tspan fill="#f85149">✕ unsupported</tspan><tspan fill="#6e7681">  symbol </tspan><tspan fill="#58a6ff">`rateLimiter`</tspan></text>
-    <text x="116" y="450"><tspan fill="#d29922">! review</tspan><tspan fill="#6e7681">       action </tspan><tspan fill="#8b949e">&#34;fixed the bug&#34;</tspan></text>
+    <text x="136" y="332"><tspan fill="#3fb950">✓ verified</tspan><tspan fill="#6e7681">     file </tspan><tspan fill="#58a6ff">src/auth.ts</tspan></text>
+    <text x="136" y="382"><tspan fill="#f85149">✕ unsupported</tspan><tspan fill="#6e7681">  symbol </tspan><tspan fill="#58a6ff">`rateLimiter`</tspan></text>
+    <text x="136" y="410" font-size="19" fill="#6e7681">   never appears in this turn's changes</text>
+    <text x="136" y="456"><tspan fill="#d29922">! review</tspan><tspan fill="#6e7681">       action </tspan><tspan fill="#8b949e">&#34;fixed the bug&#34;</tspan></text>
   </g>
+  <line x1="136" y1="470" x2="1144" y2="470" stroke="#21262d"/>
 
-  <text x="116" y="528" font-size="22" fill="#6e7681">Claude Code Stop hook + CLI · npx groundtruth · MIT</text>
+  <!-- footer summary (real CLI output) -->
+  <text x="104" y="544" font-size="22" fill="#6e7681">3 claims · <tspan fill="#3fb950">1 verified</tspan> · <tspan fill="#f85149">1 unsupported</tspan> · <tspan fill="#d29922">1 to review</tspan></text>
+
+  <!-- install line + trust chips -->
+  <text x="104" y="586" font-size="24" fill="#6e7681">$ <tspan fill="#e6edf3">npx @veltiq/groundtruth setup</tspan></text>
+  <text x="1176" y="586" font-size="20" fill="#6e7681" text-anchor="end">MIT · zero deps · 0 LLM calls</text>
 </svg>
