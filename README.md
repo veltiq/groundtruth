@@ -97,11 +97,26 @@ Prefer plugins? Add the marketplace and install in one step:
 
 ## How it works
 
+```mermaid
+flowchart LR
+  A["Turn<br/>summary + tool calls"] --> B["Evidence<br/>diff · ground truth"]
+  A --> C["Claims<br/>parsed from prose"]
+  B --> D{"Verify<br/>each claim"}
+  C --> D
+  D -->|"backed by the diff"| V["✅ verified"]
+  D -->|"checkable, zero evidence"| U["❌ unsupported"]
+  D -->|"vague / semantic"| R["⚠️ review"]
+```
+
+<details><summary>Text version</summary>
+
 ```text
 transcript ─▶ Turn ─▶ ( Evidence + Claims ) ─▶ Verdicts ─▶ Report
             summary      diff       prose      per-claim
             + tools    ground truth  parse      check
 ```
+
+</details>
 
 1. **Read the turn.** Parse the Claude Code JSONL transcript for the latest turn: the assistant's final summary plus every tool it called (`Write`, `Edit`, `MultiEdit`, `Bash`, …).
 2. **Collect ground truth.** Build evidence from those tool calls (precise, turn-scoped) plus the git working-tree diff (corroborating). This is the set of files touched, text added/removed, and commands run.
@@ -145,9 +160,35 @@ By default the hook is **non-blocking**: it prints its report and gets out of th
 
 Full details in [`docs/claim-types.md`](docs/claim-types.md).
 
+<details>
+<summary><b>Walk through one turn →</b></summary>
+
+The assistant ends with:
+
+> _"Added a `rateLimiter` in `src/rate-limit.ts`, wired it into `src/server.ts`, and ran the tests."_
+
+groundtruth extracts four claims and checks each against the diff (this is the right-hand screenshot above):
+
+| Claim | Kind | Verdict | Why |
+|---|---|---|---|
+| `rateLimiter` | symbol | ✅ verified | appears in the added code |
+| `src/rate-limit.ts` | file | ✅ verified | created this turn |
+| `src/server.ts` | file | ✅ verified | edited this turn |
+| ran the tests | command | ✅ verified | `npm test` ran via the Bash tool |
+
+Swap in a phantom — say the rate limiter was never written — and only that line flips to ❌ **unsupported**. Everything else stays green.
+
+</details>
+
 ## Verify loop — behavioral checks (opt-in)
 
 The claim check grades a turn's _words_. The **verify loop** grades its _behavior_: before the agent may finish a turn that changed something, it has to actually run / screenshot / test the work and prove it does what you asked — fixing and re-checking until it does.
+
+<p align="center">
+  <img src="assets/loop-demo.svg" alt="The loop screenshots a page, catches an invisible button, fixes it, and re-verifies — no human in the loop" width="760">
+</p>
+
+<p align="center"><sub>A real run: the agent said "done", the loop screenshotted the page, saw the CTA button hadn't rendered, fixed it, and re-shot to confirm.</sub></p>
 
 ```bash
 groundtruth install --loop          # add the loop to the Stop hook
