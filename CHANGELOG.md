@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1]
+
+### Changed
+
+- **Positioning refresh** — the README, the npm/GitHub descriptions, and the
+  plugin manifest now lead with what groundtruth *is*: the human-in-the-loop for
+  AI coding, automated. It both verifies an agent's claims against the real diff
+  **and** (opt-in) makes the agent run / screenshot / test its own work and
+  self-fix before finishing. No behavior change — docs and metadata only.
+
 ## [0.6.0]
 
 ### Added
