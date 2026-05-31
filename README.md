@@ -33,21 +33,26 @@ Your agent ends a turn with _"Done! I added a `rateLimiter` middleware to `src/s
 
 `groundtruth` reads the assistant's end-of-turn summary, extracts each concrete claim, and verifies it against what actually changed — the **ground truth**. It runs automatically as a [Claude Code](https://code.claude.com) hook, or on demand from the CLI.
 
-```text
-groundtruth — claim check
+<table>
+<tr>
+<td width="50%" valign="top">
 
-  ❌ unsupported  symbol `rateLimiter`
-     Claimed `rateLimiter`, but it does not appear anywhere in this turn's changes.
-     from: "I added a `rateLimiter` middleware to `src/server.ts`, ... and added tests."
-  ❌ unsupported  file src/server.ts
-     Claimed a change to `src/server.ts`, but it is not among the files changed (README.md).
-  ❌ unsupported  tests
-     Claimed test work, but no test file changed and no test command ran this turn.
+**When the summary lies.** The whole "codebase" here was a single README edit — every claim is a phantom:
 
-  3 claims · 0 verified · 3 unsupported
-```
+<img src="assets/screenshot-catch.png" alt="groundtruth flags three claims the diff doesn't support" width="100%">
 
-> The whole codebase here was a single README edit. groundtruth caught all three false claims.
+</td>
+<td width="50%" valign="top">
+
+**When it's honest.** The same kind of summary, but each claim is backed by the real diff:
+
+<img src="assets/screenshot-verified.png" alt="groundtruth verifies four honest claims against the diff" width="100%">
+
+</td>
+</tr>
+</table>
+
+> Real, unedited output. groundtruth caught all three phantom claims on the left and cleared all four honest ones on the right — deterministically, with **zero LLM calls**.
 
 ---
 
