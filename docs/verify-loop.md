@@ -9,10 +9,35 @@ request, and fix-and-recheck until it holds up.
 It is off by default. Turn it on with any of:
 
 ```bash
+groundtruth setup                               # recommended: hook + loop + status line, one command
 groundtruth install --loop                      # bakes --loop into the Stop hook
 # .groundtruthrc.json:  { "loop": { "enabled": true, "maxRounds": 6 } }
 # environment:          GROUNDTRUTH_LOOP=1
 ```
+
+**Never get trapped.** `GROUNDTRUTH_NO_LOOP=1` is an always-available
+kill-switch that instantly pauses the loop, whatever your config says — set it
+and the very next Stop is allowed. The round cap (below) is the other guarantee:
+the loop always lets a turn finish eventually.
+
+## Grounded in the real request, tailored to the work
+
+The loop doesn't inject a generic checklist. It reads the **actual human request**
+that opened the turn and quotes it back, so the agent verifies against what was
+asked — not its own restatement. It also infers the *kind* of work from the diff
+and leads with the verification that fits:
+
+| Detected work | What the protocol asks for |
+|---|---|
+| **web / UI** | start it (`npm run dev`), open the URL, **take a screenshot, read it**, compare pixel-for-intent, check the console |
+| **API** | start the server, hit the affected endpoint(s), check status + body (including error paths) |
+| **CLI** | run the command with realistic args, check stdout/stderr + exit code, try an invalid input |
+| **library** | run the tests, plus a smoke call of the changed function |
+
+It surfaces the concrete run command and local URL whenever it can find them
+(from your `package.json` scripts and ports in the diff). This inference only
+*tailors the guidance* — groundtruth never inspects the result, so it adds no
+false positives of its own.
 
 ## The design constraint
 

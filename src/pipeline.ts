@@ -3,7 +3,7 @@ import { buildEvidence } from "./evidence.js";
 import { extractClaims } from "./extract.js";
 import { buildReport } from "./report.js";
 import { parseTranscriptFile } from "./transcript.js";
-import type { Config, Report, Turn } from "./types.js";
+import type { Config, Evidence, Report, Turn } from "./types.js";
 import { verifyClaims } from "./verify.js";
 
 export interface PipelineInput {
@@ -21,11 +21,21 @@ export interface PipelineInput {
   config?: Config;
 }
 
+/** The full pipeline result, including the evidence the verdicts were graded against. */
+export interface PipelineResult {
+  report: Report;
+  /** The turn that was analyzed (with its parsed request, when available). */
+  turn: Turn;
+  /** The ground-truth evidence collected for the turn. */
+  evidence: Evidence;
+}
+
 /**
- * The full groundtruth pipeline:
+ * The full groundtruth pipeline, returning the report *plus* the turn and the
+ * evidence behind it — the verify loop reuses the evidence to tailor its checks.
  *   transcript -> Turn -> (Evidence + Claim[]) -> Verdict[] -> Report
  */
-export function runPipeline(input: PipelineInput): Report {
+export function analyze(input: PipelineInput): PipelineResult {
   const turn =
     input.turn ??
     (input.transcriptPath
@@ -39,5 +49,10 @@ export function runPipeline(input: PipelineInput): Report {
   });
   const claims = applyConfig(extractClaims(turn.summary), config);
   const verdicts = verifyClaims(claims, evidence);
-  return buildReport(verdicts);
+  return { report: buildReport(verdicts), turn, evidence };
+}
+
+/** Convenience wrapper that returns only the report. */
+export function runPipeline(input: PipelineInput): Report {
+  return analyze(input).report;
 }

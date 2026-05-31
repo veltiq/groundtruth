@@ -42,6 +42,22 @@ describe("parseTranscript", () => {
     expect(turn.toolUses).toHaveLength(1);
     expect(turn.toolUses[0]?.name).toBe("Edit");
     expect(turn.toolUses[0]?.input.file_path).toBe("src/auth.ts");
+    // the opening human request is captured to ground the verify loop
+    expect(turn.request).toBe("add validation");
+  });
+
+  it("captures the request from a structured (content-block) human message", () => {
+    const raw = jsonl([
+      {
+        type: "user",
+        message: { role: "user", content: [{ type: "text", text: "build a settings page" }] },
+      },
+      {
+        type: "assistant",
+        message: { role: "assistant", content: [{ type: "text", text: "done" }] },
+      },
+    ]);
+    expect(parseTranscript(raw).request).toBe("build a settings page");
   });
 
   it("scopes to the latest turn (ignores prior turns)", () => {

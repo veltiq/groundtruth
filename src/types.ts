@@ -57,6 +57,29 @@ export interface Turn {
   summary: string;
   /** Tool calls the assistant made during this turn. */
   toolUses: ToolUse[];
+  /**
+   * The human request that opened this turn (the latest genuine user prompt),
+   * when the transcript exposes it. The verify loop grounds its checks in this
+   * so the agent verifies against what was actually asked, not a generic prompt.
+   */
+  request?: string;
+}
+
+/**
+ * The kind of work a turn produced, inferred from the evidence. Used only to
+ * *tailor* the verify-loop protocol (which command to run, whether to
+ * screenshot) — never to judge the work. Detection staying advisory keeps the
+ * loop free of false positives.
+ */
+export type WorkKind = "web" | "api" | "cli" | "library" | "generic";
+
+/** A tailored description of how a turn's work should be exercised. */
+export interface WorkContext {
+  kind: WorkKind;
+  /** The concrete command to run the work, when one is discoverable (e.g. `npm run dev`). */
+  runHint?: string;
+  /** The URL to open for web work, when a port/host is discoverable. */
+  urlHint?: string;
 }
 
 /** The ground truth a turn's claims are checked against. */

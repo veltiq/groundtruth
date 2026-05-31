@@ -14,9 +14,10 @@ import {
   installStatusline,
   settingsPathFor,
 } from "./install.js";
+import { detectWorkKind, summarizeRequest } from "./intent.js";
 import { type LedgerSummary, buildStats, readLedger, recordRun, summarize } from "./ledger.js";
 import { DEFAULT_MAX_ROUNDS, runLoopGate, turnDidWork } from "./loop.js";
-import { runPipeline } from "./pipeline.js";
+import { analyze, runPipeline } from "./pipeline.js";
 import { renderJson, renderMarkdown, renderSarif, renderTerminal } from "./report.js";
 import { parseTranscriptFile } from "./transcript.js";
 import type { Turn } from "./types.js";
@@ -41,6 +42,8 @@ async function main(argv: string[]): Promise<number> {
       return runHook(rest);
     case "verify":
       return runVerify(rest);
+    case "setup":
+      return runSetup(rest);
     case "install":
       return runInstall(rest);
     case "statusline":
@@ -93,7 +96,7 @@ async function runHook(args: string[]): Promise<number> {
     args.includes("--strict") || process.env.GROUNDTRUTH_STRICT === "1" || config.strict === true;
 
   const turn = parseTranscriptFile(transcriptPath);
-  const report = runPipeline({ turn, cwd, config });
+  const { report, evidence } = analyze({ turn, cwd, config });
   recordRun(report, cwd, payload.session_id);
 
   if (config.shadow) return 0; // record only — never print or block
@@ -115,13 +118,23 @@ async function runHook(args: string[]): Promise<number> {
   // Behavioral verify loop (opt-in): once the claims hold up, require the agent
   // to actually run / screenshot / test the work before it may finish. The
   // round counter inside runLoopGate guarantees this can never loop forever.
+  // GROUNDTRUTH_NO_LOOP is an always-available instant kill-switch so the loop
+  // can never trap you, whatever the config says.
   const loopEnabled =
-    args.includes("--loop") ||
-    process.env.GROUNDTRUTH_LOOP === "1" ||
-    config.loop?.enabled === true;
+    process.env.GROUNDTRUTH_NO_LOOP !== "1" &&
+    (args.includes("--loop") ||
+      process.env.GROUNDTRUTH_LOOP === "1" ||
+      config.loop?.enabled === true);
   if (loopEnabled && turnDidWork(turn)) {
     const maxRounds = config.loop?.maxRounds ?? DEFAULT_MAX_ROUNDS;
-    const gate = runLoopGate({ cwd, session: payload.session_id, maxRounds });
+    const work = detectWorkKind(evidence, { scripts: readScripts(cwd) });
+    const gate = runLoopGate({
+      cwd,
+      session: payload.session_id,
+      maxRounds,
+      request: summarizeRequest(turn.request),
+      work,
+    });
     if (gate.block && gate.message) {
       process.stderr.write(`\n${gate.message}\n`);
       return 2;
@@ -271,6 +284,52 @@ function runInstall(args: string[]): number {
   return 0;
 }
 
+/**
+ * `groundtruth setup` — the recommended one-command install. Wires the Stop
+ * hook (with the verify loop on) + the SessionEnd digest + the status-bar line,
+ * globally by default, all idempotent. This is the "install once, just works"
+ * path; `install` stays for fine-grained control.
+ */
+function runSetup(args: string[]): number {
+  const { flags, values } = parseFlags(args, ["cwd"]);
+  const useBin = flags.has("bin") || (!flags.has("npx") && detectGlobalBinary());
+  // Default to global so it covers every project; `--local` scopes to this one.
+  const global = !flags.has("local");
+  const loop = !flags.has("no-loop"); // verify loop on by default in setup
+  const opts = {
+    global,
+    bin: useBin,
+    strict: flags.has("strict"),
+    loop,
+    events: ["Stop", "SessionEnd"] as HookEvent[],
+    cwd: values.cwd,
+  };
+
+  const result = installHook(opts);
+  process.stdout.write(
+    result.alreadyPresent
+      ? c.dim(`groundtruth hook already present in ${result.settingsPath}\n`)
+      : `${c.green("✓")} Installed groundtruth hook (Stop, SessionEnd)\n${c.dim(`  settings: ${result.settingsPath}\n`)}`,
+  );
+  if (loop)
+    process.stdout.write(
+      `${c.green("✓")} Verify loop on — agents prove their work before finishing\n`,
+    );
+
+  const sl = installStatusline(opts);
+  if (sl.changed) process.stdout.write(`${c.green("✓")} Wired the status-bar line\n`);
+  else if (sl.existing)
+    process.stdout.write(
+      c.yellow(`! Kept your existing statusLine. To combine, add: ${sl.command}\n`),
+    );
+
+  process.stdout.write(
+    `\n${c.dim("Tip:")} set ${c.cyan("GROUNDTRUTH_NO_LOOP=1")} anytime to instantly pause the loop.\n`,
+  );
+  process.stdout.write(`Restart Claude Code (or run ${c.cyan("/hooks")}) to pick it up.\n`);
+  return 0;
+}
+
 /** `groundtruth statusline` — compact one-liner for the Claude Code status bar. */
 async function runStatusline(): Promise<number> {
   let cwd = process.cwd();
@@ -373,6 +432,18 @@ function readVersion(): string {
   }
 }
 
+/** Reads the project's package.json `scripts` map (for run-command hints). */
+function readScripts(cwd: string): Record<string, string> {
+  try {
+    const pkg = JSON.parse(readFileSync(join(cwd, "package.json"), "utf8")) as {
+      scripts?: Record<string, string>;
+    };
+    return pkg.scripts && typeof pkg.scripts === "object" ? pkg.scripts : {};
+  } catch {
+    return {};
+  }
+}
+
 function printHelp(): void {
   process.stdout.write(`${c.bold("groundtruth")} ${c.dim(`v${VERSION}`)} — verify what your AI says it did against the actual diff.
 
@@ -380,8 +451,9 @@ ${c.bold("Usage")}
   groundtruth <command> [options]
 
 ${c.bold("Commands")}
+  ${c.cyan("setup")}      One command: install the hook + verify loop + status line (recommended)
   ${c.cyan("verify")}     Check the latest Claude Code turn's claims against the diff
-  ${c.cyan("install")}    Wire groundtruth into Claude Code as a Stop hook
+  ${c.cyan("install")}    Wire groundtruth into Claude Code as a Stop hook (fine-grained)
   ${c.cyan("stats")}      Show verdict tallies from the local ledger
   ${c.cyan("statusline")} Compact status for the Claude Code status bar (reads JSON on stdin)
   ${c.cyan("hook")}       Internal: run as a Stop hook (reads hook JSON on stdin)
@@ -414,7 +486,13 @@ ${c.bold("stats options")}
   --all                 Aggregate across all projects (default: current project)
   --json                Print the 7d/30d/all-time tallies as JSON (for dashboards)
 
+${c.bold("Environment")}
+  GROUNDTRUTH_NO_LOOP=1   Instantly pause the verify loop (never get trapped)
+  GROUNDTRUTH_LOOP=1      Turn the verify loop on without editing settings
+  GROUNDTRUTH_STRICT=1    Block the turn on failing claims
+
 ${c.bold("Examples")}
+  npx @veltiq/groundtruth setup
   npx groundtruth verify
   npx groundtruth verify --markdown > claim-check.md
   npx groundtruth install --global

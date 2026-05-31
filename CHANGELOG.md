@@ -6,19 +6,46 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0]
+
 ### Added
 
-- **Verify loop** (`install --loop`, a `loop` config block, or `GROUNDTRUTH_LOOP=1`)
-  — an opt-in behavioral gate. After the claim check passes, a turn that changed
-  something is held at the Stop event and asked to actually run / screenshot /
-  test the work and prove it matches the request, fixing and re-checking until
-  it does. groundtruth only gates the stop and counts rounds — it never judges
-  the work itself, so the loop adds no false positives; a per-session round cap
-  (`maxRounds`, default 6) guarantees it can never loop forever. Pure
-  conversation turns are never gated. See [`docs/verify-loop.md`](docs/verify-loop.md).
+- **One-command setup** — `groundtruth setup` wires the Stop hook (with the
+  verify loop on), the SessionEnd digest, and the status-bar line in a single
+  idempotent step, globally by default. Install once; it just works. `install`
+  stays for fine-grained control.
+- **Verify loop** (`setup`, `install --loop`, a `loop` config block, or
+  `GROUNDTRUTH_LOOP=1`) — an opt-in behavioral gate. After the claim check
+  passes, a turn that changed something is held at the Stop event and asked to
+  actually run / screenshot / test the work and prove it matches the request,
+  fixing and re-checking until it does. groundtruth only gates the stop and
+  counts rounds — it never judges the work itself, so the loop adds no false
+  positives; a per-session round cap (`maxRounds`, default 6) guarantees it can
+  never loop forever. Pure conversation turns are never gated. See
+  [`docs/verify-loop.md`](docs/verify-loop.md).
+- **Intent-aware verification** — the loop now grounds its check in the *actual
+  human request* (parsed from the transcript) and tailors the protocol to the
+  kind of work it detects: **web/UI** leads with "start it, open the URL,
+  take a screenshot, read it"; **API** with "hit the endpoint, check status +
+  body"; **CLI** with "run it, check stdout + exit code"; **library** with "run
+  the tests + a smoke call". It surfaces the concrete run command (`npm run
+  dev`) and the local URL when it can find them. Detection only *tailors* the
+  guidance — groundtruth still never judges the work, so no new false positives.
+- **`GROUNDTRUTH_NO_LOOP=1` kill-switch** — an always-available env var that
+  instantly pauses the verify loop regardless of config, so it can never trap a
+  turn. Documented in `groundtruth help`.
+- **`analyze()` + `detectWorkKind()` / `summarizeRequest()`** added to the
+  public library API (the pipeline now returns its evidence alongside the report).
 
 ### Fixed
 
+- **Precision: bare prose slash-pairs are no longer mined as file claims.**
+  Tokens like `web/UI`, `stdout/stderr`, `client/server`, or `and/or` in a
+  summary were being treated as bare file paths and flagged `unsupported`. A
+  bare (un-backticked) slash token now counts as a path only when it carries a
+  real code extension or sits under a known source root (`src/`, `lib/`,
+  `packages/`, …). Caught by groundtruth dogfooding its own PR. Real paths
+  (`src/db/client.ts`, `src/auth`) are unaffected.
 - **Precision: eliminated four classes of false `unsupported` verdicts** on
   honest work, with an end-to-end regression suite (`src/precision.test.ts`):
   - A **modify** claim whose identifier isn't in the changed lines
