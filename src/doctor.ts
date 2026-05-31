@@ -133,13 +133,13 @@ export function buildDoctorReport(inp: DoctorInputs): DoctorReport {
 
   // Hook wiring
   const scan = scanSettings(inp.settings);
+  const hookHasLoop = scan.found.some((f) => f.command.includes("--loop"));
   if (scan.found.length > 0) {
     const events = [...new Set(scan.found.flatMap((f) => f.events))].join(", ");
-    const loop = scan.found.some((f) => f.command.includes("--loop"));
     add(
       "Stop hook",
       "ok",
-      `wired in ${scan.found.map((f) => shortPath(f.path)).join(" + ")} (${events})${loop ? " · verify loop on" : ""}`,
+      `wired in ${scan.found.map((f) => shortPath(f.path)).join(" + ")} (${events})${hookHasLoop ? " · verify loop on" : ""}`,
     );
   } else {
     add(
@@ -187,16 +187,16 @@ export function buildDoctorReport(inp: DoctorInputs): DoctorReport {
       "Expected before your first turn here — run an agent turn, then re-check.",
     );
 
-  // Verify loop
-  const loopConfigured = inp.config.loop?.enabled === true;
+  // Verify loop — on when the wired hook carries --loop or config enables it.
+  const loopOn = hookHasLoop || inp.config.loop?.enabled === true;
   if (inp.noLoopEnv)
     add(
       "Verify loop",
       "warn",
-      "paused by GROUNDTRUTH_NO_LOOP=1",
+      `paused by GROUNDTRUTH_NO_LOOP=1${loopOn ? " (otherwise on)" : ""}`,
       "Unset GROUNDTRUTH_NO_LOOP to re-enable the loop.",
     );
-  else if (loopConfigured) add("Verify loop", "ok", "enabled in config");
+  else if (loopOn) add("Verify loop", "ok", `on${hookHasLoop ? " (hook --loop)" : " (config)"}`);
   else add("Verify loop", "ok", "off (opt-in) — enable via `setup`, `--loop`, or config");
 
   // Ledger

@@ -56,6 +56,25 @@ describe("buildDoctorReport", () => {
     const hook = r.checks.find((c) => c.name === "Stop hook");
     expect(hook?.status).toBe("ok");
     expect(hook?.detail).toContain("verify loop on");
+    // the Verify-loop check must agree with the wired hook (no off/on contradiction)
+    const loop = r.checks.find((c) => c.name === "Verify loop");
+    expect(loop?.status).toBe("ok");
+    expect(loop?.detail).toMatch(/^on/);
+  });
+
+  it("reports the loop on from a wired --loop hook even without config", () => {
+    const r = buildDoctorReport({
+      ...base,
+      settings: [
+        {
+          path: "/p/.claude/settings.json",
+          json: {
+            hooks: { Stop: [{ hooks: [{ command: "npx -y @veltiq/groundtruth hook --loop" }] }] },
+          },
+        },
+      ],
+    });
+    expect(r.checks.find((c) => c.name === "Verify loop")?.detail).toContain("hook --loop");
   });
 
   it("FAILS with an actionable hint when the hook isn't wired", () => {
