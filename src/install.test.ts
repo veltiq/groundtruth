@@ -51,11 +51,15 @@ describe("installHook", () => {
     expect(seeded.hooks.Stop).toBeDefined();
   });
 
-  it("defaults to the npx form and supports the bin + strict forms", () => {
+  it("defaults to the npx form and supports the bin + strict + loop forms", () => {
     expect(hookCommand({})).toBe("npx -y @veltiq/groundtruth hook");
     expect(hookCommand({ bin: true })).toBe("groundtruth hook");
     expect(hookCommand({ bin: true, strict: true })).toBe("groundtruth hook --strict");
     expect(hookCommand({ strict: true })).toBe("npx -y @veltiq/groundtruth hook --strict");
+    expect(hookCommand({ bin: true, loop: true })).toBe("groundtruth hook --loop");
+    expect(hookCommand({ bin: true, strict: true, loop: true })).toBe(
+      "groundtruth hook --strict --loop",
+    );
   });
 
   it("targets the global settings path when --global", () => {

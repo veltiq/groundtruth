@@ -122,7 +122,7 @@ groundtruth verify --markdown            # emit markdown (great as a PR comment)
 groundtruth verify --json                # machine-readable output
 groundtruth verify --strict              # exit non-zero if anything is unsupported
 
-groundtruth install [--global] [--npx] [--strict] [--print]
+groundtruth install [--global] [--npx] [--strict] [--loop] [--print]
 ```
 
 By default the hook is **non-blocking**: it prints its report and gets out of the way. Pass `--strict` (or set `GROUNDTRUTH_STRICT=1`) to make it block the turn when unsupported claims are found.
@@ -139,6 +139,25 @@ By default the hook is **non-blocking**: it prints its report and gets out of th
 | **action** | _"fixed the timeout bug"_ | — not machine-checkable; flagged for review |
 
 Full details in [`docs/claim-types.md`](docs/claim-types.md).
+
+## Verify loop — behavioral checks (opt-in)
+
+The claim check grades a turn's _words_. The **verify loop** grades its _behavior_: before the agent may finish a turn that changed something, it has to actually run / screenshot / test the work and prove it does what you asked — fixing and re-checking until it does.
+
+```bash
+groundtruth install --loop          # add the loop to the Stop hook
+# or per project:   { "loop": { "enabled": true } } in .groundtruthrc.json
+# or one-off:       GROUNDTRUTH_LOOP=1
+```
+
+When it's on, a turn that used a mutating tool (`Write` / `Edit` / `Bash` / …) is held at the Stop event and handed a short protocol: spawn a fresh sub-checker that verifies by the kind of work — open the page in a browser and read a screenshot (web), run the command (CLI), hit the endpoint (API), run the tests (library) — check it against the original request, and only release the turn once the agent writes a `pass` verdict.
+
+Two guarantees keep it in the same bias-toward-silence spirit as the rest of the tool:
+
+- **It never judges the work itself.** groundtruth only gates the Stop and counts rounds; the agent performs and reports the verification. No screenshot is graded by groundtruth, so the loop adds no false positives of its own.
+- **It can't loop forever.** A per-session round counter gives up after `maxRounds` (default 6) and lets the turn finish.
+
+Pure-conversation turns (no tools) are never gated. Full details in [`docs/verify-loop.md`](docs/verify-loop.md).
 
 ## Use in CI (GitHub Action)
 
@@ -198,7 +217,8 @@ Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` 
   "shadow": false,
   "ignore": ["CHANGELOG.md", "*.generated.ts"],
   "ignoreKinds": ["command"],
-  "output": "terminal"
+  "output": "terminal",
+  "loop": { "enabled": false, "maxRounds": 6 }
 }
 ```
 
@@ -207,6 +227,7 @@ Optional — drop a `.groundtruthrc.json` in your project (or a `"groundtruth"` 
 - **`strict`** / **`output`** — defaults for blocking and output format.
 - **`failOn`** — which verdict levels count as a failure in strict mode (default `["unsupported"]`).
 - **`shadow`** — record to the ledger but never print or block (for gradual rollout).
+- **`loop`** — the opt-in [verify loop](#verify-loop--behavioral-checks-opt-in): `enabled` turns it on, `maxRounds` (clamped 2–20, default 6) caps the rounds before it gives up.
 
 Install into more hook events for multi-agent workflows:
 
