@@ -25,13 +25,18 @@
 
 # groundtruth
 
-> **TL;DR** — Your AI says _"Done! I added X, fixed Y, wrote tests."_ groundtruth checks each claim against the real diff and flags the ones that never happened. One command: `npx @veltiq/groundtruth install`.
+> **TL;DR** — AI agents confidently say _"Done!"_ — then you find the typo, the half-finished function, the feature it never wrote. groundtruth is **the human-in-the-loop, automated**: it verifies every turn against the real diff, and (opt-in) makes the agent **run, screenshot, and test its own work and fix it** before it's allowed to finish. One command: `npx @veltiq/groundtruth setup`.
 
-**Catch when your AI coding assistant claims work it didn't do.**
+**The human-in-the-loop for AI coding. Catch when your assistant lies, leaves typos, or skips work — before you do.**
 
 Your agent ends a turn with _"Done! I added a `rateLimiter` middleware to `src/server.ts`, fixed the timeout bug, and added tests."_ You trust the summary, commit, and move on. Two weeks later production breaks — the rate limiter was never written. The summary lied (or hallucinated), and nothing checked it against the actual diff.
 
-`groundtruth` reads the assistant's end-of-turn summary, extracts each concrete claim, and verifies it against what actually changed — the **ground truth**. It runs automatically as a [Claude Code](https://code.claude.com) hook, or on demand from the CLI.
+Left alone, an AI agent will confidently report work it didn't do, miss requirements you asked for, and leave typos and half-edits behind — and the faster they code, the more of this slips through. `groundtruth` closes that gap. It does what a careful human reviewer does, automatically, on **every** turn:
+
+1. **Verifies the claims.** It reads the assistant's end-of-turn summary, extracts each concrete claim, and checks it against what actually changed — the **ground truth**. Phantom work gets flagged before you trust it.
+2. **Makes the agent prove it works** _(opt-in [verify loop](docs/verify-loop.md))_. Before finishing, the agent must actually run / screenshot / test the change against your original request, hunt for its own mistakes, and **fix-and-recheck until it holds up** — web work gets opened in a real browser and screenshotted, CLIs get run, APIs get hit, libraries get tested.
+
+The result: higher-quality output you don't have to babysit. It runs automatically as a [Claude Code](https://code.claude.com) hook, or on demand from the CLI — deterministically, with **zero LLM calls** for the claim check.
 
 <table>
 <tr>
