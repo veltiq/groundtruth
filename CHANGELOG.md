@@ -17,6 +17,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (`maxRounds`, default 6) guarantees it can never loop forever. Pure
   conversation turns are never gated. See [`docs/verify-loop.md`](docs/verify-loop.md).
 
+### Fixed
+
+- **Precision: eliminated four classes of false `unsupported` verdicts** on
+  honest work, with an end-to-end regression suite (`src/precision.test.ts`):
+  - A **modify** claim whose identifier isn't in the changed lines
+    (`"updated the `parseConfig` function"` while editing only its body) is now
+    `unverifiable`, not `unsupported` — a modification needn't surface the name.
+  - **"added tests"** is verified when the added code carries test-runner idioms
+    (`describe` / `it` / `expect` / `assert` / …), even when the file isn't
+    conventionally named (`foo.test.ts`).
+  - A dependency name is no longer also mined as a phantom symbol — `"installed
+    the `zod` package"` is one dependency claim, not a stray `zod` symbol.
+  Phantom claims (a symbol/file/test that genuinely never appeared) are still
+  flagged exactly as before.
+
 ## [0.5.0]
 
 ### Added
